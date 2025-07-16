@@ -23,6 +23,7 @@ interface AuthContextType {
   createEvent: (eventData: Omit<Event, 'id' | 'artist' | 'artistId' | 'status' | 'approvalStatus'>) => void;
   updateEventApproval: (eventId: string, status: 'Approved' | 'Rejected') => void;
   createMovie: (movieData: Omit<Movie, 'id'>) => void;
+  deleteMovie: (movieId: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

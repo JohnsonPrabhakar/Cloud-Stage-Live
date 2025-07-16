@@ -294,6 +294,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     persistMovies([...movies, newMovie]);
   };
+  
+  const deleteMovie = (movieId: string) => {
+    const updatedMovies = movies.filter(movie => movie.id !== movieId);
+    persistMovies(updatedMovies);
+  };
 
   const updateEventApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
     const updatedEvents = events.map(e => 
@@ -330,6 +335,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateEventApproval,
     movies,
     createMovie,
+    deleteMovie,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;

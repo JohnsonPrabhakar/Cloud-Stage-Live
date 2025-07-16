@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import type React from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function AddMoviePage() {
     const { toast } = useToast();
@@ -42,10 +44,17 @@ export default function AddMoviePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold font-headline mb-6">Add New Movie</h1>
+        <div className="mb-4">
+             <Button asChild variant="outline">
+                <Link href="/admin/movies">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Movies
+                </Link>
+            </Button>
+        </div>
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle className="font-headline">Movie Details</CardTitle>
+          <CardTitle className="font-headline">Add New Movie</CardTitle>
           <CardDescription>Fill in the form to add a new movie to the catalog.</CardDescription>
         </CardHeader>
         <CardContent>

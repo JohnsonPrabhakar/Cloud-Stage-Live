@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Music, PlusCircle, UserCheck, BarChart, Users, UserSquare } from 'lucide-react';
+import { Music, PlusCircle, UserCheck, BarChart, Users, UserSquare, Film } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/Logo';
@@ -43,7 +43,7 @@ export default function AdminLayout({
     { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/artist-management', label: 'Artists', icon: UserSquare },
-    { href: '/admin/add-movie', label: 'Add Movie', icon: PlusCircle },
+    { href: '/admin/movies', label: 'Movies', icon: Film },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   ];
 
@@ -57,7 +57,7 @@ export default function AdminLayout({
               href={item.href}
               className={cn(
                   "flex items-center gap-2 transition-colors hover:text-foreground",
-                  pathname === item.href ? "text-foreground" : "text-muted-foreground"
+                  pathname.startsWith(item.href) && (item.href !== '/admin' || pathname === '/admin') ? "text-foreground" : "text-muted-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
