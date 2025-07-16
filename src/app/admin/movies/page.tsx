@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export default function MovieManagementPage() {
@@ -70,7 +71,15 @@ export default function MovieManagementPage() {
                         <TableBody>
                             {movies.map((movie) => (
                                 <TableRow key={movie.id}>
-                                    <TableCell className="font-medium">{movie.title}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="rounded-sm">
+                                                <AvatarImage src={movie.thumbnailUrl} />
+                                                <AvatarFallback>{movie.title.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span>{movie.title}</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{movie.category}</TableCell>
                                     <TableCell>{movie.language}</TableCell>
                                     <TableCell className="text-right">
@@ -119,4 +128,3 @@ export default function MovieManagementPage() {
         </div>
     );
 }
-
