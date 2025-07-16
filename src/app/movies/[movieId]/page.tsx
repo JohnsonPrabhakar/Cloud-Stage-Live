@@ -1,17 +1,17 @@
-'use client';
-
-import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Languages, Clapperboard, ArrowLeft } from 'lucide-react';
 import type { Movie } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { mockMovies } from '@/lib/mock-data';
 
-export default function MovieDetailPage() {
-  const params = useParams();
-  const movieId = params.movieId as string;
-  // In a real app, you would fetch this movie from an API
-  const movie: Movie | undefined = undefined;
+// In a real app, this would be an async function fetching from an API
+function getMovieById(id: string): Movie | undefined {
+    return mockMovies.find(movie => movie.id === id);
+}
+
+export default function MovieDetailPage({ params }: { params: { movieId: string } }) {
+  const movie = getMovieById(params.movieId);
 
   if (!movie) {
     return (

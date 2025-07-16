@@ -1,27 +1,21 @@
-'use client';
-
-import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Calendar, Clock, Languages, Ticket, User, MessageSquare } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { ArrowLeft, Calendar, Languages, MessageSquare, Ticket, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
 import Link from 'next/link';
+import { mockEvents } from '@/lib/mock-data';
 
-export default function EventDetailPage() {
-  const params = useParams();
-  const eventId = params.eventId as string;
-  // In a real app, you would fetch this event from an API
-  const event: Event | undefined = undefined;
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const router = useRouter();
+// In a real app, this would be an async function fetching from an API
+function getEventById(id: string): Event | undefined {
+    return mockEvents.find(event => event.id === id);
+}
+
+export default function EventDetailPage({ params }: { params: { eventId: string } }) {
+  const event = getEventById(params.eventId);
   
-  // This will need to be replaced with a real check
+  // This will need to be replaced with a real check based on the logged-in user
   const hasTicket = false;
 
   if (!event) {
@@ -37,20 +31,11 @@ export default function EventDetailPage() {
       </div>
     );
   }
-
+  
   const handleGetTicket = () => {
-    if (!user) {
-      router.push('/user-login');
-      return;
-    }
-    // Mock purchase flow
-    toast({
-      title: 'Ticket Purchased!',
-      description: `You're all set for ${event.title}.`,
-    });
-    // In a real app, you'd redirect to a payment gateway and then a confirmation page.
-    // For now, we just reload to simulate having a ticket.
-    setTimeout(() => window.location.reload(), 1000);
+    // This function will need to be moved to a client component
+    // to handle user interaction (e.g., in a separate <GetTicketButton /> component)
+    console.log("Purchase logic would be here.");
   };
 
   return (
@@ -135,12 +120,15 @@ export default function EventDetailPage() {
               </div>
             </CardContent>
             <div className="p-6">
+               {/* This button needs to be a client component to handle onClick */}
               {hasTicket ? (
                 <Button disabled className="w-full"><Ticket className="mr-2 h-4 w-4"/> You have a ticket</Button>
               ) : (
-                <Button onClick={handleGetTicket} className="w-full" size="lg">
-                  <Ticket className="mr-2 h-4 w-4"/>
-                  Get Ticket {event.price > 0 ? ` for ₹${event.price}` : '(Free)'}
+                 <Button asChild className="w-full" size="lg">
+                    <Link href={`/events/${params.eventId}/purchase`}>
+                        <Ticket className="mr-2 h-4 w-4"/>
+                        Get Ticket {event.price > 0 ? ` for ₹${event.price}` : '(Free)'}
+                    </Link>
                 </Button>
               )}
             </div>
