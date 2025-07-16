@@ -1,24 +1,19 @@
-'use client';
-
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { MovieCard } from '@/components/MovieCard';
+import { FilterControls } from '@/components/FilterControls';
+import { mockMovies } from '@/lib/mock-data';
 import type { Movie } from '@/lib/types';
 
-export default function MoviesPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('all');
-  const [language, setLanguage] = useState('all');
+export default function MoviesPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const searchTerm = typeof searchParams?.search === 'string' ? searchParams.search : '';
+  const category = typeof searchParams?.category === 'string' ? searchParams.category : 'all';
+  const language = typeof searchParams?.language === 'string' ? searchParams.language : 'all';
 
   // In a real app, this would be fetched from an API
-  const allMovies: Movie[] = [];
+  const allMovies: Movie[] = mockMovies;
 
   const filteredMovies = allMovies.filter((movie: Movie) => {
     return (
@@ -27,7 +22,7 @@ export default function MoviesPage() {
       (language === 'all' || movie.language === language)
     );
   });
-  
+
   const categories = ['all', ...Array.from(new Set(allMovies.map(m => m.category)))];
   const languages = ['all', ...Array.from(new Set(allMovies.map(m => m.language)))];
 
@@ -42,32 +37,14 @@ export default function MoviesPage() {
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-lg bg-card">
-        <Input
-          placeholder="Search by title..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-grow"
-        />
-        <div className="flex gap-4">
-           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(cat => <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map(lang => <SelectItem key={lang} value={lang}>{lang.charAt(0).toUpperCase() + lang.slice(1)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FilterControls
+        searchPlaceholder="Search by title..."
+        categories={categories}
+        languages={languages}
+        initialSearch={searchTerm}
+        initialCategory={category}
+        initialLanguage={language}
+      />
 
       {filteredMovies.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
