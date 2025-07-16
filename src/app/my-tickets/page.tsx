@@ -57,6 +57,9 @@ export default function MyTicketsPage() {
           <p className="text-muted-foreground mt-2">
             You haven't purchased any tickets. Explore events to get started!
           </p>
+          <Button asChild className="mt-4">
+            <Link href="/events">Explore Events</Link>
+          </Button>
         </div>
       )}
     </div>

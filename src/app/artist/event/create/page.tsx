@@ -24,6 +24,18 @@ export default function CreateEventPage() {
   const [description, setDescription] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState('https://placehold.co/600x400.png');
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleGenerateDescription = async () => {
     if (!youtubeUrl) {
@@ -71,21 +83,17 @@ export default function CreateEventPage() {
         language: data.language as Event['language'],
         date: date,
         price: Number(data.price),
-        thumbnailUrl: 'https://placehold.co/600x400.png', // Placeholder
+        thumbnailUrl: thumbnailUrl,
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
     };
 
     createEvent(newEventData);
     
-    toast({
-      title: 'Event Submitted!',
-      description: 'Your event has been submitted for approval.'
-    });
-    // Here you would typically reset the form
     e.currentTarget.reset();
     setDate(undefined);
     setDescription('');
     setYoutubeUrl('');
+    setThumbnailUrl('https://placehold.co/600x400.png');
   }
 
   return (
@@ -102,7 +110,7 @@ export default function CreateEventPage() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="youtubeUrl">YouTube URL (for AI)</Label>
+            <Label htmlFor="youtubeUrl">YouTube URL (for AI Description)</Label>
             <Input id="youtubeUrl" placeholder="https://youtube.com/watch?v=..." value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} />
           </div>
 
@@ -191,7 +199,7 @@ export default function CreateEventPage() {
           
            <div className="space-y-2">
             <Label htmlFor="thumbnail">Event Thumbnail</Label>
-            <Input id="thumbnail" name="thumbnail" type="file" required />
+            <Input id="thumbnail" name="thumbnail" type="file" required onChange={handleThumbnailChange} accept="image/*" />
             <p className="text-xs text-muted-foreground">Upload an eye-catching image for your event.</p>
           </div>
 

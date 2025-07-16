@@ -14,7 +14,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,16 +30,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function MovieManagementPage() {
     const { movies, deleteMovie } = useAuth();
-    const { toast } = useToast();
-
-    const handleDelete = (movieId: string) => {
-        deleteMovie(movieId);
-        toast({
-            title: 'Movie Deleted',
-            description: 'The movie has been successfully removed.',
-            variant: 'destructive'
-        });
-    };
 
     return (
         <div>
@@ -112,7 +101,7 @@ export default function MovieManagementPage() {
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDelete(movie.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                                        <AlertDialogAction onClick={() => deleteMovie(movie.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>

@@ -3,7 +3,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
 import { Check, Eye, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -101,24 +100,15 @@ const RejectionDialog = ({ app, onConfirm }: { app: ArtistApplication, onConfirm
 }
 
 export default function ArtistRegistrationsPage() {
-  const { toast } = useToast();
   const { artistApplications, updateApplicationStatus } = useAuth();
   const [selectedApp, setSelectedApp] = useState<ArtistApplication | null>(null);
 
   const handleApprove = (id: string) => {
     updateApplicationStatus(id, 'Approved');
-    toast({
-      title: 'Application Approved',
-      description: `The artist's status has been updated.`
-    });
   };
 
   const handleRejectConfirm = (id: string, reason: string) => {
     updateApplicationStatus(id, 'Rejected', reason);
-    toast({
-      title: 'Application Rejected',
-      description: `The artist's status has been updated.`
-    });
     setSelectedApp(null);
   }
 

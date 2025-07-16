@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import type React from 'react';
@@ -18,7 +17,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function AddMoviePage() {
-    const { toast } = useToast();
     const { createMovie } = useAuth();
     const [videoUrl, setVideoUrl] = useState('');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -27,7 +25,7 @@ export default function AddMoviePage() {
         const handler = setTimeout(() => {
             const thumbnailUrl = getYoutubeThumbnail(videoUrl);
             setThumbnailPreview(thumbnailUrl);
-        }, 500); // Debounce to avoid too many requests
+        }, 500);
 
         return () => {
             clearTimeout(handler);
@@ -40,10 +38,9 @@ export default function AddMoviePage() {
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        const submittedVideoUrl = (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Default placeholder
+        const submittedVideoUrl = (data.videoUrl as string) || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
-        // Convert watch URL to embed URL
         const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
 
         const newMovie = {
@@ -56,11 +53,6 @@ export default function AddMoviePage() {
         };
         
         createMovie(newMovie);
-
-        toast({
-            title: 'Movie Added!',
-            description: 'The new movie has been successfully added to the platform.'
-        });
         e.currentTarget.reset();
         setVideoUrl('');
         setThumbnailPreview(null);
@@ -99,13 +91,13 @@ export default function AddMoviePage() {
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="action">Action</SelectItem>
-                            <SelectItem value="comedy">Comedy</SelectItem>
-                            <SelectItem value="devotional">Devotional</SelectItem>
-                            <SelectItem value="drama">Drama</SelectItem>
-                            <SelectItem value="love">Love</SelectItem>
-                            <SelectItem value="suspense">Suspense</SelectItem>
-                            <SelectItem value="kids">Kids</SelectItem>
+                            <SelectItem value="Action">Action</SelectItem>
+                            <SelectItem value="Comedy">Comedy</SelectItem>
+                            <SelectItem value="Devotional">Devotional</SelectItem>
+                            <SelectItem value="Drama">Drama</SelectItem>
+                            <SelectItem value="Love">Love</SelectItem>
+                            <SelectItem value="Suspense">Suspense</SelectItem>
+                            <SelectItem value="Kids">Kids</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -116,12 +108,12 @@ export default function AddMoviePage() {
                             <SelectValue placeholder="Select a language" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="english">English</SelectItem>
-                            <SelectItem value="tamil">Tamil</SelectItem>
-                            <SelectItem value="hindi">Hindi</SelectItem>
-                            <SelectItem value="kannada">Kannada</SelectItem>
-                            <SelectItem value="telugu">Telugu</SelectItem>
-                            <SelectItem value="malayalam">Malayalam</SelectItem>
+                            <SelectItem value="English">English</SelectItem>
+                            <SelectItem value="Tamil">Tamil</SelectItem>
+                            <SelectItem value="Hindi">Hindi</SelectItem>
+                            <SelectItem value="Kannada">Kannada</SelectItem>
+                            <SelectItem value="Telugu">Telugu</SelectItem>
+                            <SelectItem value="Malayalam">Malayalam</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -130,7 +122,7 @@ export default function AddMoviePage() {
             <Tabs defaultValue="url" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="url">Add via URL</TabsTrigger>
-                <TabsTrigger value="upload">Upload File</TabsTrigger>
+                <TabsTrigger value="upload" disabled>Upload File</TabsTrigger>
               </TabsList>
               <TabsContent value="url" className="pt-4 space-y-4">
                 <div className="space-y-2">
@@ -159,18 +151,6 @@ export default function AddMoviePage() {
                         />
                     </div>
                 )}
-              </TabsContent>
-              <TabsContent value="upload" className="pt-4">
-                 <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="movieFile">Movie File</Label>
-                      <Input id="movieFile" name="movieFile" type="file" />
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="thumbnailFile">Movie Thumbnail</Label>
-                      <Input id="thumbnailFile" name="thumbnailFile" type="file" />
-                    </div>
-                 </div>
               </TabsContent>
             </Tabs>
             

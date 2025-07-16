@@ -39,7 +39,7 @@ export default function ArtistManagementPage() {
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar>
-                                                <AvatarImage src={getArtistImageUrl(artist)} />
+                                                <AvatarImage src={getArtistImageUrl(artist)} alt={artist.name} />
                                                 <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <span className="font-medium">{artist.name}</span>

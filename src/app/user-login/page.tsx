@@ -15,13 +15,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import type { TabsProps } from '@radix-ui/react-tabs';
 
 export default function UserLoginPage() {
   const { login, register } = useAuth();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -32,32 +30,23 @@ export default function UserLoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(loginEmail, loginPassword);
-    if (success) {
-        // Toast handled in AuthProvider
-    } else {
-        toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
-    }
+    login(loginEmail, loginPassword);
   };
   
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     const success = register(registerName, registerEmail, registerPassword, registerPhone);
     if (success) {
-        toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live! Please log in.' });
         setActiveTab('login');
-        // Clear registration form fields
         setRegisterName('');
         setRegisterEmail('');
         setRegisterPassword('');
         setRegisterPhone('');
-    } else {
-        // Toast for failure is handled in register function
     }
   };
 
   const onTabChange: TabsProps['onValueChange'] = (value) => {
-    setActiveTab(value);
+    if (value) setActiveTab(value);
   }
 
   return (

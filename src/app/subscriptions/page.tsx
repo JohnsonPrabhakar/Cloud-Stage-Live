@@ -35,7 +35,7 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md mb-8">
+        <div className="w-full max-w-md mb-8 self-start container">
             <Button asChild variant="outline">
                 <Link href="/">
                     <ArrowLeft className="mr-2 h-4 w-4" />

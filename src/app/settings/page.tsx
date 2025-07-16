@@ -10,16 +10,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/user-login');
     }
   }, [user, isLoading, router]);
+  
+  const handleSaveChanges = () => {
+    toast({
+        title: "Preferences Saved",
+        description: "Your settings have been updated.",
+    });
+  }
 
   if (isLoading || !user) {
     return <p className="p-8 text-center">Loading settings...</p>;
@@ -88,7 +97,7 @@ export default function SettingsPage() {
         </Card>
         
         <div className="flex justify-end">
-            <Button>Save Preferences</Button>
+            <Button onClick={handleSaveChanges}>Save Preferences</Button>
         </div>
       </div>
     </div>

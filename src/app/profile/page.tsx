@@ -8,14 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { ArrowLeft, Upload } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading, updateUserProfile } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
 
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
@@ -55,17 +53,13 @@ export default function ProfilePage() {
         interests: interests.split(',').map(i => i.trim()),
         profilePictureUrl: imagePreview ?? undefined,
     });
-    toast({
-        title: "Profile Updated",
-        description: "Your changes have been saved successfully."
-    });
   }
 
   if (isLoading || !user) {
     return <p className="p-8 text-center">Loading your profile...</p>;
   }
 
-  const getInitials = (name: string) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : '';
+  const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
 
   return (
     <div className="container mx-auto max-w-2xl py-12">

@@ -1,9 +1,7 @@
 
 'use client';
 
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +15,8 @@ import type { Event, Movie } from '@/lib/types';
 import Autoplay from "embla-carousel-autoplay"
 import React from 'react';
 import Image from 'next/image';
+import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
 
 const heroImages = [
   { src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bXVzaWMlMjBjb25jZXJ0fGVufDB8fHx8MTc1MjY2MTIyOHww&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Live music concert', hint: 'music concert' },
@@ -28,13 +28,16 @@ const heroImages = [
 
 export default function Home() {
   const plugin = React.useRef(
-    Autoplay({ delay: 2000, stopOnInteraction: true })
+    Autoplay({ delay: 3000, stopOnInteraction: true })
   )
+  const { events, movies } = useAuth();
 
-  const liveEvents: Event[] = [];
-  const upcomingEvents: Event[] = [];
-  const pastEvents: Event[] = [];
-  const movies: Movie[] = [];
+  const approvedEvents = events.filter(e => e.approvalStatus === 'Approved');
+  const now = new Date();
+  const liveEvents = approvedEvents.filter(e => e.status === 'Live');
+  const upcomingEvents = approvedEvents.filter(e => e.status === 'Upcoming' && new Date(e.date) > now);
+  const pastEvents = approvedEvents.filter(e => e.status === 'Past' || new Date(e.date) <= now);
+  const featuredMovies = movies.slice(0, 5);
 
   return (
     <div className="flex flex-col items-center">
@@ -64,14 +67,17 @@ export default function Home() {
             ))}
           </CarouselContent>
         </Carousel>
-        <div className="absolute inset-0 flex items-center justify-center text-center text-white">
-           <div className="container mx-auto px-4">
+        <div className="absolute inset-0 flex items-center justify-center text-center text-white p-4">
+           <div className="container mx-auto">
              <h1 className="text-4xl md:text-6xl font-headline font-bold text-white mb-4 drop-shadow-lg">
                 CloudStage Live
              </h1>
              <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-8 drop-shadow-md">
                 Your stage, anywhere. Discover and stream exclusive live events from artists around the world.
              </p>
+              <Button size="lg" asChild>
+                <Link href="/events">Explore Events</Link>
+              </Button>
            </div>
         </div>
       </section>
@@ -79,7 +85,7 @@ export default function Home() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} />
         <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} />
-        <SectionCarousel title="Featured Movies" items={movies} CardComponent={MovieCard} plugin={plugin} />
+        <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} plugin={plugin} />
         <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} />
       </div>
     </div>
@@ -94,14 +100,7 @@ interface SectionCarouselProps<T> {
 }
 
 function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, plugin }: SectionCarouselProps<T>) {
-  if (items.length === 0) return (
-    <section>
-        <h2 className="text-3xl font-headline font-bold mb-6">{title}</h2>
-        <div className="text-center py-8 text-muted-foreground">
-            <p>No {title.toLowerCase()} available at the moment.</p>
-        </div>
-    </section>
-  );
+  if (items.length === 0) return null;
 
   return (
     <section>
@@ -109,7 +108,7 @@ function SectionCarousel<T extends { id: string }>({ title, items, CardComponent
       <Carousel 
         opts={{
           align: "start",
-          loop: true,
+          loop: items.length > 3,
         }}
         plugins={[plugin.current]}
         onMouseEnter={plugin.current.stop}
@@ -119,7 +118,7 @@ function SectionCarousel<T extends { id: string }>({ title, items, CardComponent
         <CarouselContent className="-ml-4">
           {items.map((item, index) => (
             <CarouselItem key={item.id + index} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-              <div className="p-1">
+              <div className="p-1 h-full">
                 <CardComponent item={item} />
               </div>
             </CarouselItem>

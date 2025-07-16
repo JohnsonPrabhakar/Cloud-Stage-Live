@@ -19,9 +19,7 @@ export default function MovieDetailPage() {
   useEffect(() => {
     if (movieId) {
       const foundMovie = movies.find(m => m.id === movieId);
-      if (foundMovie) {
-        setMovie(foundMovie);
-      }
+      setMovie(foundMovie || null);
     }
   }, [movieId, movies]);
 
@@ -55,7 +53,6 @@ export default function MovieDetailPage() {
           className="w-full h-full"
           src={movie.videoUrl}
           title="YouTube video player"
-          frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         ></iframe>

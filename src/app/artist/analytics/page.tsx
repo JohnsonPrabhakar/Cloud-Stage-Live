@@ -10,15 +10,7 @@ import {
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
 import type { Event } from '@/lib/types';
-
-// In a real app, this data would be fetched from an API
-const artistEvents: Event[] = [];
-
-const chartData = artistEvents.map(event => ({
-  name: event.title.slice(0, 15) + '...',
-  ticketsSold: Math.floor(Math.random() * 500) + 50,
-  revenue: event.price * (Math.floor(Math.random() * 500) + 50),
-}));
+import { useAuth } from '@/hooks/use-auth';
 
 const chartConfig = {
   ticketsSold: {
@@ -32,6 +24,16 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function ArtistAnalyticsPage() {
+  const { user, events } = useAuth();
+  
+  const artistEvents = events.filter(e => e.artistId === user?.id);
+
+  const chartData = artistEvents.map(event => ({
+    name: event.title.slice(0, 15) + (event.title.length > 15 ? '...' : ''),
+    ticketsSold: Math.floor(Math.random() * 500) + 50, // Mock data
+    revenue: event.price * (Math.floor(Math.random() * 500) + 50), // Mock data
+  }));
+
   const totalRevenue = chartData.reduce((acc, item) => acc + item.revenue, 0);
   const totalTicketsSold = chartData.reduce((acc, item) => acc + item.ticketsSold, 0);
 
@@ -97,6 +99,7 @@ export default function ArtistAnalyticsPage() {
           ) : (
             <div className="text-center py-16 text-muted-foreground">
               <p>No event data available to display analytics.</p>
+              <p className="text-sm">Create an event to get started.</p>
             </div>
           )}
         </CardContent>

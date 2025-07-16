@@ -60,11 +60,11 @@ export default function ArtistRegisterPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!canSubmit) return;
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
     const newApplication = {
-        id: `app-${Date.now()}`,
         name: data.name as string,
         email: data.email as string,
         password: data.password as string,
@@ -74,7 +74,6 @@ export default function ArtistRegisterPage() {
         profileLink: data.profileLink as string,
         description: data.description as string,
         artistImageUrl: artistImage ?? undefined,
-        status: 'Pending' as const,
     };
     
     artistRegister(newApplication);

@@ -8,10 +8,9 @@ import { Terminal } from "lucide-react"
 import type { Event } from '@/lib/types';
 
 export default function ArtistDashboardPage() {
-  const { user } = useAuth();
+  const { user, events } = useAuth();
 
-  // In a real app, you'd fetch events for this artistId
-  const artistEvents: Event[] = []; 
+  const artistEvents = events.filter(e => e.artistId === user?.id);
 
   const upcomingEvents = artistEvents.filter(e => e.status === 'Upcoming');
   const liveEvents = artistEvents.filter(e => e.status === 'Live');
@@ -22,13 +21,15 @@ export default function ArtistDashboardPage() {
       <h1 className="text-3xl font-bold font-headline mb-2">Welcome, {user?.name}!</h1>
       <p className="text-muted-foreground mb-6">Here's a summary of your events.</p>
       
-      <Alert className="mb-6">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Account Status: Pending Verification</AlertTitle>
-        <AlertDescription>
-          Your account is currently pending verification. You can create free events, but paid events are disabled until your account is approved by an admin.
-        </AlertDescription>
-      </Alert>
+      {user?.applicationStatus !== 'approved' && (
+          <Alert className="mb-6">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Account Status: Pending Verification</AlertTitle>
+            <AlertDescription>
+              Your account is currently pending verification. You can create free events, but paid events are disabled until your account is approved by an admin.
+            </AlertDescription>
+          </Alert>
+      )}
 
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

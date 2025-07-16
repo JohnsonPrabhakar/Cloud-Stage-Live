@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,24 +7,25 @@ import { ArrowLeft, Calendar, Languages, MessageSquare, Ticket, User } from 'luc
 import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
 import Link from 'next/link';
-import { mockEvents } from '@/lib/mock-data';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 
-// In a real app, this would be an async function fetching from an API
-function getEventById(id: string): Event | undefined {
-    // Note: In a real app, you'd fetch this from a database or API
-    // and the date would likely already be a Date object.
-    const event = mockEvents.find(event => event.id === id);
-    if (event) {
-        return { ...event, date: new Date(event.date) };
-    }
-    return undefined;
-}
-
-export default function EventDetailPage({ params }: { params: { eventId: string } }) {
-  const event = getEventById(params.eventId);
+export default function EventDetailPage() {
+  const { events } = useAuth();
+  const params = useParams();
+  const eventId = params.eventId as string;
+  const [event, setEvent] = useState<Event | null>(null);
   
   // This will need to be replaced with a real check based on the logged-in user
   const hasTicket = false;
+
+  useEffect(() => {
+    if (eventId) {
+      const foundEvent = events.find(e => e.id === eventId);
+      setEvent(foundEvent || null);
+    }
+  }, [eventId, events]);
 
   if (!event) {
     return (
@@ -56,7 +59,6 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
                 className="w-full h-full"
                 src={event.videoUrl}
                 title="YouTube video player"
-                frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
@@ -105,7 +107,7 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
                 <Calendar className="h-5 w-5 mt-1 text-primary"/>
                 <div>
                   <h3 className="font-semibold">Date & Time</h3>
-                  <p className="text-muted-foreground">{event.date.toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                  <p className="text-muted-foreground">{new Date(event.date).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</p>
                 </div>
               </div>
                <div className="flex items-start gap-4">
@@ -124,7 +126,7 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
                 <Button disabled className="w-full"><Ticket className="mr-2 h-4 w-4"/> You have a ticket</Button>
               ) : (
                  <Button asChild className="w-full" size="lg">
-                    <Link href={`/events/${params.eventId}/purchase`}>
+                    <Link href={`/events/${event.id}/purchase`}>
                         <Ticket className="mr-2 h-4 w-4"/>
                         Get Ticket {event.price > 0 ? ` for ₹${event.price}` : '(Free)'}
                     </Link>

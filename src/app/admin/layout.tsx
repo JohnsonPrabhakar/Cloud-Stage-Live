@@ -4,12 +4,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Music, PlusCircle, UserCheck, BarChart, Users, UserSquare, Film } from 'lucide-react';
+import { Music, UserCheck, BarChart, Users, UserSquare, Film } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export default function AdminLayout({
@@ -69,11 +67,11 @@ export default function AdminLayout({
             >
               <item.icon className="h-4 w-4" />
               <span>{item.label}</span>
-              {item.notificationCount && item.notificationCount > 0 && (
-                <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+              {item.notificationCount && item.notificationCount > 0 ? (
+                <Badge className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                   {item.notificationCount}
                 </Badge>
-              )}
+              ) : null}
             </Link>
           ))}
         </nav>

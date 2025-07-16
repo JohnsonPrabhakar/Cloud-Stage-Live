@@ -13,28 +13,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
-  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const isSuccess = login(email, password);
-
-    if (isSuccess) {
-      // The toast is now handled inside AuthProvider based on role
-    } else {
-        toast({
-            title: 'Login Failed',
-            description: 'Please check your credentials or await admin approval.',
-            variant: 'destructive'
-        });
-    }
+    login(email, password);
   };
 
   return (

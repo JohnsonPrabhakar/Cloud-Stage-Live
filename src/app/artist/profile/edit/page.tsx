@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import type React from "react";
@@ -14,7 +13,6 @@ import { Upload } from "lucide-react";
 
 export default function EditArtistProfilePage() {
     const { user, updateUserProfile } = useAuth();
-    const { toast } = useToast();
     const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,13 +45,9 @@ export default function EditArtistProfilePage() {
             name,
             profilePictureUrl: imagePreview ?? undefined,
         });
-        toast({
-            title: "Profile Updated",
-            description: "Your changes have been saved successfully."
-        });
     };
 
-    const getInitials = (name: string) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : '';
+    const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
 
     if (!user) return null;
 

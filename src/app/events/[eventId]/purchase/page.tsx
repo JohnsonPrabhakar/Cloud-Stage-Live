@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,13 +10,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CreditCard, PartyPopper } from 'lucide-react';
 import type { Event } from '@/lib/types';
-import { mockEvents } from '@/lib/mock-data';
 
-
-export default function PurchasePage({ params }: { params: { eventId: string } }) {
-  const { user, isLoading } = useAuth();
+export default function PurchasePage() {
+  const { user, isLoading, events } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const params = useParams();
+  const eventId = params.eventId as string;
   const [event, setEvent] = useState<Event | null>(null);
   const [isPurchased, setIsPurchased] = useState(false);
 
@@ -27,17 +27,17 @@ export default function PurchasePage({ params }: { params: { eventId: string } }
   }, [user, isLoading, router]);
   
   useEffect(() => {
-    const foundEvent = mockEvents.find(e => e.id === params.eventId);
-    if (foundEvent) {
-      setEvent(foundEvent);
-    } else {
-      router.push('/events');
+    if (eventId) {
+      const foundEvent = events.find(e => e.id === eventId);
+      if (foundEvent) {
+        setEvent(foundEvent);
+      } else {
+        router.push('/events');
+      }
     }
-  }, [params.eventId, router]);
+  }, [eventId, events, router]);
 
   const handlePurchase = () => {
-    // In a real app, this would involve a payment gateway integration.
-    // For now, we'll simulate a successful purchase.
     setIsPurchased(true);
     toast({
       title: 'Purchase Successful!',
@@ -71,7 +71,7 @@ export default function PurchasePage({ params }: { params: { eventId: string } }
     <div className="container mx-auto max-w-2xl py-12">
       <div className="mb-8">
         <Button asChild variant="outline">
-          <Link href={`/events/${params.eventId}`}>
+          <Link href={`/events/${eventId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Event
           </Link>

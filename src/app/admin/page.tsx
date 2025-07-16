@@ -5,19 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Event } from '@/lib/types';
 import { Check, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function AdminEventManagementPage() {
-    const { toast } = useToast();
     const { events, updateEventApproval } = useAuth();
     
     const handleApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
         updateEventApproval(eventId, status);
-        toast({
-            title: `Event ${status}`,
-            description: `The event has been successfully ${status.toLowerCase()}.`
-        });
     };
 
     const pendingEvents = events.filter(e => e.approvalStatus === 'Pending');

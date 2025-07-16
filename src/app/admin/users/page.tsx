@@ -34,7 +34,7 @@ export default function UserManagementPage() {
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} />
+                                            <AvatarImage src={user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} alt={user.name} />
                                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <span className="font-medium">{user.name}</span>
