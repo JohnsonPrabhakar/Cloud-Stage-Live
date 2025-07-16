@@ -11,10 +11,12 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'next/navigation';
 
-export default function EventDetailPage({ params }: { params: { eventId: string } }) {
+export default function EventDetailPage() {
   const { events, myTickets } = useAuth();
-  const eventId = params.eventId;
+  const params = useParams();
+  const eventId = params.eventId as string;
   const [event, setEvent] = useState<Event | null>(null);
   const { toast } = useToast();
   
@@ -27,8 +29,9 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
     }
   }, [eventId, events]);
 
-  const handleWatchNowClick = () => {
+  const handleWatchNowClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     if (event?.status === 'Upcoming') {
+      e.preventDefault();
       toast({
         title: 'Event Not Live',
         description: 'This event has not started yet. Please check back later.',
