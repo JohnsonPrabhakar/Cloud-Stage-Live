@@ -122,7 +122,7 @@ export default function ArtistRegistrationsPage() {
     setSelectedApp(null);
   }
 
-  const pendingApps = artistApplications.filter(app => app.status === 'Pending');
+  const pendingApps = artistApplications.filter(app => app.status.toLowerCase() === 'pending');
 
   return (
     <div>
