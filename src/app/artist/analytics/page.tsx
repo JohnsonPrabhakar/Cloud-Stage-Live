@@ -29,7 +29,8 @@ export default function ArtistAnalyticsPage() {
   const artistEvents = events.filter(e => e.artistId === user?.id);
   const artistEventIds = new Set(artistEvents.map(e => e.id));
   
-  const artistTickets = allTickets.filter(t => artistEventIds.has(t.eventId));
+  // Ensure allTickets is not undefined before filtering
+  const artistTickets = allTickets ? allTickets.filter(t => artistEventIds.has(t.eventId)) : [];
 
   const chartData = artistEvents.map(event => {
     const ticketsForEvent = artistTickets.filter(t => t.eventId === event.id);
