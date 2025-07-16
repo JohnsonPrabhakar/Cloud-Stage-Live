@@ -43,8 +43,20 @@ export default function ArtistRegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeRefund, setAgreeRefund] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [artistImage, setArtistImage] = useState<string | null>(null);
   
   const canSubmit = agreeTerms && agreeRefund && agreePrivacy;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setArtistImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,6 +73,7 @@ export default function ArtistRegisterPage() {
         category: data.category as string,
         profileLink: data.profileLink as string,
         description: data.description as string,
+        artistImageUrl: artistImage ?? undefined,
         status: 'Pending' as const,
     };
     
@@ -127,7 +140,7 @@ export default function ArtistRegisterPage() {
 
              <div className="space-y-2">
                 <Label htmlFor="artistImage">Artist/Band Image</Label>
-                <Input id="artistImage" name="artistImage" type="file" required />
+                <Input id="artistImage" name="artistImage" type="file" required onChange={handleImageChange} accept="image/*"/>
                 <p className="text-xs text-muted-foreground">Upload a high-quality photo.</p>
             </div>
             

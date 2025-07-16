@@ -61,4 +61,5 @@ export type ArtistApplication = {
   profileLink: string;
   description: string;
   rejectionReason?: string;
+  artistImageUrl?: string;
 };
