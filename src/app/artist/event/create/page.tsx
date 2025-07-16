@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Sparkles, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, setHours, setMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { generateEventDescription } from '@/ai/flows/generate-event-description';
@@ -21,6 +22,7 @@ export default function CreateEventPage() {
   const { toast } = useToast();
   const { createEvent } = useAuth();
   const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState({ hour: '18', minute: '00' });
   const [description, setDescription] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -76,12 +78,14 @@ export default function CreateEventPage() {
         return;
     }
 
+    const combinedDate = setMinutes(setHours(date, parseInt(time.hour, 10)), parseInt(time.minute, 10));
+
     const newEventData = {
         title: data.title as string,
         description: data.description as string,
         category: data.category as Event['category'],
         language: data.language as Event['language'],
-        date: date,
+        date: combinedDate,
         price: Number(data.price),
         thumbnailUrl: thumbnailUrl,
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
@@ -91,6 +95,7 @@ export default function CreateEventPage() {
     
     e.currentTarget.reset();
     setDate(undefined);
+    setTime({ hour: '18', minute: '00' });
     setDescription('');
     setYoutubeUrl('');
     setThumbnailUrl('https://placehold.co/600x400.png');
@@ -172,25 +177,47 @@ export default function CreateEventPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="date">Date & Time</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-              </Popover>
+                <Label>Date & Time</Label>
+                <div className="flex gap-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "flex-1 justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                    <Input
+                        type="number"
+                        min="0"
+                        max="23"
+                        className="w-[70px]"
+                        placeholder="HH"
+                        value={time.hour}
+                        onChange={(e) => setTime({...time, hour: e.target.value})}
+                    />
+                    <Input
+                        type="number"
+                        min="0"
+                        max="59"
+                        step="5"
+                        className="w-[70px]"
+                        placeholder="MM"
+                        value={time.minute}
+                        onChange={(e) => setTime({...time, minute: e.target.value})}
+                    />
+                </div>
             </div>
+
             <div className="space-y-2">
                 <Label htmlFor="price">Ticket Price (₹)</Label>
                 <Input id="price" name="price" type="number" placeholder="Enter 0 for free event" required />
