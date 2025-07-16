@@ -85,23 +85,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
     }
     
-    // Allow admins and regular users to log in directly
-    if (foundUser.role === 'user' || foundUser.role === 'admin') {
-      // proceed with login
-    } else if (foundUser.role === 'artist') {
-      const application = artistApplications.find(app => app.email === email);
-      if (application?.status !== 'Approved') {
-          toast({
-              title: 'Application Not Approved',
-              description: 'Your artist application is still pending or has been rejected.',
-              variant: 'destructive'
-          });
-          setIsLoading(false);
-          return false;
-      }
-    } else {
-       setIsLoading(false);
-       return false;
+    if (foundUser.role === 'artist') {
+        const application = artistApplications.find(app => app.email === email);
+        if (!application || application.status !== 'Approved') {
+            toast({
+                title: 'Application Not Approved',
+                description: 'Your artist application is still pending or has been rejected.',
+                variant: 'destructive'
+            });
+            setIsLoading(false);
+            return false;
+        }
     }
     
     if(foundUser.subscription?.expiryDate) {
@@ -142,34 +136,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  const artistRegister = (application: ArtistApplication) => {
-     if (registeredUsers.some(u => u.email === application.email && u.role !== 'user')) {
+  const artistRegister = (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
+     if (registeredUsers.some(u => u.email === applicationData.email && u.role !== 'user')) {
        toast({
           title: 'Application Failed',
-          description: 'An account with this email already exists.',
+          description: 'An artist or admin account with this email already exists.',
           variant: 'destructive'
         });
        return;
      }
 
-     const existingUser = registeredUsers.find(u => u.email === application.email && u.role === 'user');
+     const newApplication: ArtistApplication = {
+        ...applicationData,
+        id: `app-${Date.now()}`,
+        status: 'Pending',
+     }
+
+     const existingUser = registeredUsers.find(u => u.email === newApplication.email && u.role === 'user');
 
      if (existingUser) {
-       const updatedUsers = registeredUsers.map(u => u.id === existingUser.id ? { ...u, applicationStatus: 'pending' as const } : u);
+       const updatedUsers = registeredUsers.map(u => u.id === existingUser.id ? { ...u, applicationStatus: 'pending' as const, role: 'artist' as const } : u);
        persistUsers(updatedUsers);
      } else {
         const newArtistUser: User = { 
           id: `artist-${Date.now()}`,
-          name: application.name,
-          email: application.email,
-          password: application.password,
+          name: newApplication.name,
+          email: newApplication.email,
+          password: newApplication.password,
           role: 'artist',
           applicationStatus: 'pending'
       };
       persistUsers([...registeredUsers, newArtistUser]);
      }
      
-     persistApplications([...artistApplications, {...application, status: 'Pending'}]);
+     persistApplications([...artistApplications, newApplication]);
      
      toast({
       title: 'Application Submitted!',
@@ -178,18 +178,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/admin-login');
   };
 
-  const updateApplicationStatus = (applicationId: string, status: 'Approved' | 'Rejected') => {
+  const updateApplicationStatus = (applicationId: string, status: 'Approved' | 'Rejected', reason?: string) => {
       const appToUpdate = artistApplications.find(app => app.id === applicationId);
       if (!appToUpdate) return;
       
-      const updatedApplications = artistApplications.map(app => 
-          app.id === applicationId ? { ...app, status } : app
-      );
+      const updatedApplications = artistApplications.map(app => {
+        if (app.id !== applicationId) return app;
+        const updatedApp = { ...app, status };
+        if (status === 'Rejected' && reason) {
+            (updatedApp as ArtistApplication).rejectionReason = reason;
+        }
+        return updatedApp;
+      });
       persistApplications(updatedApplications);
 
-      const updatedUsers = registeredUsers.map(u => 
-        u.email === appToUpdate.email ? { ...u, role: status === 'Approved' ? 'artist' : 'user', applicationStatus: status.toLowerCase() as User['applicationStatus'] } : u
-      );
+      const updatedUsers = registeredUsers.map(u => {
+        if (u.email !== appToUpdate.email) return u;
+        
+        const newStatus = status === 'Approved' ? 'approved' : 'rejected';
+        
+        return { ...u, applicationStatus: newStatus };
+      });
       persistUsers(updatedUsers);
   };
 

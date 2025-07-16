@@ -10,11 +10,12 @@ interface AuthContextType {
   events: Event[];
   login: (email: string, pass: string) => boolean;
   register: (name: string, email: string, pass: string) => boolean;
-  artistRegister: (application: ArtistApplication) => void;
+  artistRegister: (application: Omit<ArtistApplication, 'id' | 'status'>) => void;
   logout: () => void;
   updateApplicationStatus: (
     applicationId: string,
-    status: 'Approved' | 'Rejected'
+    status: 'Approved' | 'Rejected',
+    reason?: string
   ) => void;
   updateUserProfile: (updatedUser: Partial<User>) => void;
   subscribeUser: () => void;

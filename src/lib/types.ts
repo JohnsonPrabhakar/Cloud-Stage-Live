@@ -60,4 +60,5 @@ export type ArtistApplication = {
   contactNumber: string;
   profileLink: string;
   description: string;
+  rejectionReason?: string;
 };
