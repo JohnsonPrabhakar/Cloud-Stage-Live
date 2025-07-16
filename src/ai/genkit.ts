@@ -1,10 +1,9 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {next} from '@genkit-ai/next';
+import {firebase} from '@genkit-ai/next/v1';
 
 export const ai = genkit({
-  plugins: [googleAI(), next({ dev: true })],
+  plugins: [googleAI(), firebase()],
   model: 'googleai/gemini-2.0-flash',
-  logLevel: 'debug',
   enableTracingAndMetrics: true,
 });
