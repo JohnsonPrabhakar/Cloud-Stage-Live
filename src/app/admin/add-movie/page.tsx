@@ -38,7 +38,7 @@ export default function AddMoviePage() {
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        const submittedVideoUrl = (data.videoUrl as string) || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        const submittedVideoUrl = data.videoUrl as string;
         const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
         const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
@@ -59,107 +59,109 @@ export default function AddMoviePage() {
     }
 
   return (
-    <div>
-        <div className="mb-4">
-             <Button asChild variant="outline">
-                <Link href="/admin/movies">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Movies
-                </Link>
-            </Button>
-        </div>
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="font-headline">Add New Movie</CardTitle>
-          <CardDescription>Fill in the form to add a new movie to the catalog.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Movie Title</Label>
-              <Input id="title" name="title" placeholder="e.g., The Great Adventure" required />
+    <div className="flex items-center justify-center py-6 md:py-12">
+        <div className="w-full max-w-4xl px-4">
+            <div className="mb-4">
+                <Button asChild variant="outline">
+                    <Link href="/admin/movies">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Movies
+                    </Link>
+                </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" placeholder="A brief synopsis of the movie" required />
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select name="category" required>
-                        <SelectTrigger id="category">
-                            <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Action">Action</SelectItem>
-                            <SelectItem value="Comedy">Comedy</SelectItem>
-                            <SelectItem value="Devotional">Devotional</SelectItem>
-                            <SelectItem value="Drama">Drama</SelectItem>
-                            <SelectItem value="Love">Love</SelectItem>
-                            <SelectItem value="Suspense">Suspense</SelectItem>
-                            <SelectItem value="Kids">Kids</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                     <Select name="language" required>
-                        <SelectTrigger id="language">
-                            <SelectValue placeholder="Select a language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="English">English</SelectItem>
-                            <SelectItem value="Tamil">Tamil</SelectItem>
-                            <SelectItem value="Hindi">Hindi</SelectItem>
-                            <SelectItem value="Kannada">Kannada</SelectItem>
-                            <SelectItem value="Telugu">Telugu</SelectItem>
-                            <SelectItem value="Malayalam">Malayalam</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle className="font-headline">Add New Movie</CardTitle>
+                    <CardDescription>Fill in the form to add a new movie to the catalog.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                        <Label htmlFor="title">Movie Title</Label>
+                        <Input id="title" name="title" placeholder="e.g., The Great Adventure" required />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea id="description" name="description" placeholder="A brief synopsis of the movie" required />
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Select name="category" required>
+                                    <SelectTrigger id="category">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Action">Action</SelectItem>
+                                        <SelectItem value="Comedy">Comedy</SelectItem>
+                                        <SelectItem value="Devotional">Devotional</SelectItem>
+                                        <SelectItem value="Drama">Drama</SelectItem>
+                                        <SelectItem value="Love">Love</SelectItem>
+                                        <SelectItem value="Suspense">Suspense</SelectItem>
+                                        <SelectItem value="Kids">Kids</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="language">Language</Label>
+                                <Select name="language" required>
+                                    <SelectTrigger id="language">
+                                        <SelectValue placeholder="Select a language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="English">English</SelectItem>
+                                        <SelectItem value="Tamil">Tamil</SelectItem>
+                                        <SelectItem value="Hindi">Hindi</SelectItem>
+                                        <SelectItem value="Kannada">Kannada</SelectItem>
+                                        <SelectItem value="Telugu">Telugu</SelectItem>
+                                        <SelectItem value="Malayalam">Malayalam</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
 
-            <Tabs defaultValue="url" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="url">Add via URL</TabsTrigger>
-                <TabsTrigger value="upload" disabled>Upload File</TabsTrigger>
-              </TabsList>
-              <TabsContent className="pt-4 space-y-4" value="url">
-                <div className="space-y-2">
-                  <Label htmlFor="videoUrl">Video URL</Label>
-                  <Input 
-                    id="videoUrl" 
-                    name="videoUrl" 
-                    placeholder="e.g., https://youtube.com/watch?v=..." 
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The thumbnail will be automatically fetched from the video link.
-                  </p>
-                </div>
-                 {thumbnailPreview && (
-                    <div className="space-y-2">
-                        <Label>Thumbnail Preview</Label>
-                        <Image 
-                            src={thumbnailPreview} 
-                            alt="Thumbnail preview"
-                            width={200}
-                            height={112}
-                            className="rounded-md border object-cover"
-                            unoptimized
-                        />
-                    </div>
-                )}
-              </TabsContent>
-            </Tabs>
-            
-            <div className="flex justify-end">
-              <Button type="submit">Add Movie</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                        <Tabs defaultValue="url" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="url">Add via URL</TabsTrigger>
+                            <TabsTrigger value="upload" disabled>Upload File</TabsTrigger>
+                        </TabsList>
+                        <TabsContent className="pt-4 space-y-4" value="url">
+                            <div className="space-y-2">
+                            <Label htmlFor="videoUrl">Video URL</Label>
+                            <Input 
+                                id="videoUrl" 
+                                name="videoUrl" 
+                                placeholder="e.g., https://youtube.com/watch?v=..." 
+                                value={videoUrl}
+                                onChange={(e) => setVideoUrl(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                The thumbnail will be automatically fetched from the video link.
+                            </p>
+                            </div>
+                            {thumbnailPreview && (
+                                <div className="space-y-2">
+                                    <Label>Thumbnail Preview</Label>
+                                    <Image 
+                                        src={thumbnailPreview} 
+                                        alt="Thumbnail preview"
+                                        width={200}
+                                        height={112}
+                                        className="rounded-md border object-cover"
+                                        unoptimized
+                                    />
+                                </div>
+                            )}
+                        </TabsContent>
+                        </Tabs>
+                        
+                        <div className="flex justify-end">
+                        <Button type="submit">Add Movie</Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }

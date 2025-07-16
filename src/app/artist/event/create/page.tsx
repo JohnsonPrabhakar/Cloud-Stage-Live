@@ -81,7 +81,7 @@ export default function CreateEventPage() {
 
     const combinedDate = setMinutes(setHours(date, parseInt(time.hour, 10)), parseInt(time.minute, 10));
     
-    const submittedVideoUrl = (data.youtubeUrl as string) || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    const submittedVideoUrl = data.youtubeUrl as string;
     const finalThumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
     const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
 
