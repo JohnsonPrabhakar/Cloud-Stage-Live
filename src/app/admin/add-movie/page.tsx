@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import type React from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { getYoutubeThumbnail } from '@/lib/utils';
+import { getYoutubeThumbnail, convertToEmbedUrl } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
@@ -41,7 +41,7 @@ export default function AddMoviePage() {
         const submittedVideoUrl = data.videoUrl as string;
         const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
-        const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
+        const embedUrl = convertToEmbedUrl(submittedVideoUrl) || '';
 
         const newMovie = {
             title: data.title as string,
