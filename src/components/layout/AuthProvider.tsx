@@ -20,11 +20,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     try {
-      const storedUser = sessionStorage.getItem('user');
-      const storedRole = sessionStorage.getItem('role') as Role;
-      const storedRegisteredUsers = sessionStorage.getItem('registeredUsers');
-      const storedArtistApplications = sessionStorage.getItem('artistApplications');
-      const storedEvents = sessionStorage.getItem('events');
+      const storedUser = localStorage.getItem('user');
+      const storedRole = localStorage.getItem('role') as Role;
+      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+      const storedArtistApplications = localStorage.getItem('artistApplications');
+      const storedEvents = localStorage.getItem('events');
       
       if (storedUser && storedRole) {
         const parsedUser = JSON.parse(storedUser);
@@ -46,34 +46,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date) }));
         setEvents(initialEvents);
-        sessionStorage.setItem('events', JSON.stringify(initialEvents));
+        localStorage.setItem('events', JSON.stringify(initialEvents));
       }
       
       if (!storedRegisteredUsers) {
         const adminUser: User = { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin123', role: 'admin' };
         setRegisteredUsers([adminUser]);
-        sessionStorage.setItem('registeredUsers', JSON.stringify([adminUser]));
+        localStorage.setItem('registeredUsers', JSON.stringify([adminUser]));
       }
 
     } catch (error) {
-        console.error("Failed to parse session storage item.")
+        console.error("Failed to parse local storage item.")
     }
     setIsLoading(false);
   }, []);
 
   const persistUsers = (users: User[]) => {
     setRegisteredUsers(users);
-    sessionStorage.setItem('registeredUsers', JSON.stringify(users));
+    localStorage.setItem('registeredUsers', JSON.stringify(users));
   }
 
   const persistApplications = (applications: ArtistApplication[]) => {
     setArtistApplications(applications);
-    sessionStorage.setItem('artistApplications', JSON.stringify(applications));
+    localStorage.setItem('artistApplications', JSON.stringify(applications));
   }
   
   const persistEvents = (eventsToSave: Event[]) => {
     setEvents(eventsToSave);
-    sessionStorage.setItem('events', JSON.stringify(eventsToSave));
+    localStorage.setItem('events', JSON.stringify(eventsToSave));
   }
 
   const login = (email: string, pass: string): boolean => {
@@ -104,8 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(foundUser);
     setRole(foundUser.role);
-    sessionStorage.setItem('user', JSON.stringify(foundUser));
-    sessionStorage.setItem('role', foundUser.role);
+    localStorage.setItem('user', JSON.stringify(foundUser));
+    localStorage.setItem('role', foundUser.role);
 
     toast({
         title: 'Login Successful',
@@ -206,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
-    sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
 
     const updatedUsers = registeredUsers.map(u => u.id === user.id ? updatedUser : u);
     persistUsers(updatedUsers);
@@ -267,8 +267,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setUser(null);
     setRole(null);
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('role');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
     router.push('/');
     setIsLoading(false);
   };
