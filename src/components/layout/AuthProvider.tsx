@@ -5,20 +5,15 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import type { User, Role } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
-import { mockEvents } from '@/lib/mock-data'; // We can use this for mock artists too
 
 // Let's create a list of approved artist emails for our mock scenario
-const approvedArtistEmails = ['sarah.s@music.com'];
-// John and Cool Cats are pending, so they should NOT be able to log in.
-// We will also keep a generic artist login for testing purposes.
-const genericArtistEmail = 'artist@example.com';
-approvedArtistEmails.push(genericArtistEmail);
-
+const approvedArtistEmails = ['sarah.s@music.com', 'artist@example.com'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -26,9 +21,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = sessionStorage.getItem('user');
       const storedRole = sessionStorage.getItem('role') as Role;
+      const storedRegisteredUsers = sessionStorage.getItem('registeredUsers');
       if (storedUser && storedRole) {
         setUser(JSON.parse(storedUser));
         setRole(storedRole);
+      }
+      if (storedRegisteredUsers) {
+        setRegisteredUsers(JSON.parse(storedRegisteredUsers));
       }
     } catch (error) {
         console.error("Failed to parse session storage item.")
@@ -36,44 +35,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = (email: string, pass: string) => {
+  const persistUsers = (users: User[]) => {
+    setRegisteredUsers(users);
+    sessionStorage.setItem('registeredUsers', JSON.stringify(users));
+  }
+
+  const login = (email: string, pass: string): boolean => {
     setIsLoading(true);
     let loggedInUser: User | null = null;
     let loggedInRole: Role = null;
-    let successfulLogin = false;
 
     if (email === 'admin@cloudstage.live' && pass === 'admin123') {
       loggedInUser = { id: 'admin', name: 'Admin', email };
       loggedInRole = 'admin';
       router.push('/admin');
-      successfulLogin = true;
-    } else if (approvedArtistEmails.includes(email)) {
-      // Artist Login - ONLY if they are in the approved list
-      loggedInUser = { id: 'artist-mock', name: 'Verified Artist', email };
+    } else if (approvedArtistEmails.includes(email) && pass === 'password123') { // Artists use a standard password for mock
+      loggedInUser = { id: `artist-${email}`, name: 'Verified Artist', email };
       loggedInRole = 'artist';
       router.push('/artist/dashboard');
-      successfulLogin = true;
-    } else if (email.includes('@') && !email.endsWith('@artist.com') && !['john.d@example.com', 'cats@band.com'].includes(email)) {
-      // General user login
-      loggedInUser = { id: 'user-mock', name: 'Sample User', email };
-      loggedInRole = 'user';
-      router.push('/');
-      successfulLogin = true;
+    } else {
+      const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
+      if (foundUser) {
+        loggedInUser = foundUser;
+        loggedInRole = 'user';
+        router.push('/');
+      }
     }
 
-    if (successfulLogin && loggedInUser && loggedInRole) {
-        setUser(loggedInUser);
-        setRole(loggedInRole);
-        sessionStorage.setItem('user', JSON.stringify(loggedInUser));
-        sessionStorage.setItem('role', loggedInRole);
-    } else {
-        // Handle failed login
-        // If they were trying to log in as an unapproved artist, they get a specific error.
-        // We'll have to use a toast from the login page itself for this.
+    if (loggedInUser && loggedInRole) {
+      setUser(loggedInUser);
+      setRole(loggedInRole);
+      sessionStorage.setItem('user', JSON.stringify(loggedInUser));
+      sessionStorage.setItem('role', loggedInRole);
+      setIsLoading(false);
+      return true;
     }
+    
     setIsLoading(false);
-    return successfulLogin;
+    return false;
   };
+
+  const register = (name: string, email: string, pass: string): boolean => {
+    if (registeredUsers.some(u => u.email === email)) {
+      return false; // User already exists
+    }
+    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass };
+    persistUsers([...registeredUsers, newUser]);
+    return login(email, pass);
+  };
+
 
   const artistRegister = (details: Omit<User, 'id'>) => {
      // In a real app, this would hit a backend endpoint to save the application.
@@ -97,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     role,
     isLoading,
     login,
+    register,
     artistRegister,
     logout,
   };

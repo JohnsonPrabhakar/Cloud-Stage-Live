@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function UserLoginPage() {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const { toast } = useToast();
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -28,15 +28,22 @@ export default function UserLoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    login(loginEmail, loginPassword);
-    toast({ title: 'Login Successful', description: 'Welcome back!' });
+    const success = login(loginEmail, loginPassword);
+    if (success) {
+        toast({ title: 'Login Successful', description: 'Welcome back!' });
+    } else {
+        toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
+    }
   };
   
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a mock registration. In a real app, you would also call a registration endpoint.
-    login(registerEmail, registerPassword); 
-    toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live!' });
+    const success = register(registerName, registerEmail, registerPassword);
+    if (success) {
+        toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live!' });
+    } else {
+        toast({ title: 'Registration Failed', description: 'An account with this email already exists.', variant: 'destructive' });
+    }
   };
 
   return (

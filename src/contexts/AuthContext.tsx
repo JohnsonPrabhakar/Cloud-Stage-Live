@@ -5,7 +5,8 @@ interface AuthContextType {
   user: User | null;
   role: Role;
   isLoading: boolean;
-  login: (email: string, pass: string) => void;
+  login: (email: string, pass: string) => boolean;
+  register: (name: string, email: string, pass: string) => boolean;
   artistRegister: (details: Omit<User, 'id'>) => void;
   logout: () => void;
 }

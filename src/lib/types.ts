@@ -2,6 +2,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  password?: string; // Add password for mock auth
   interests?: string[];
   subscription?: {
     plan: 'Premium';
