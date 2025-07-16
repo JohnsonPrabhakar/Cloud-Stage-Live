@@ -37,8 +37,8 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
     }
   };
 
-  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (hasTicket && status !== 'Live') {
+  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+    if (hasTicket && status === 'Upcoming') {
       e.preventDefault();
       toast({
         title: 'Event Not Live',
@@ -61,7 +61,7 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
   return (
     <Card className="w-full overflow-hidden flex flex-col h-full transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0 relative">
-        <Link href={`/events/${id}`}>
+        <Link href={`/events/${id}`} onClick={handleButtonClick}>
           <Image
             src={thumbnailUrl}
             alt={title}
@@ -78,7 +78,7 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="font-headline text-xl mb-2 leading-tight">
-          <Link href={`/events/${id}`}>{title}</Link>
+          <Link href={`/events/${id}`} onClick={handleButtonClick}>{title}</Link>
         </CardTitle>
         <p className="text-sm text-muted-foreground font-medium">{artist}</p>
         <div className="flex items-center text-sm text-muted-foreground mt-2">
@@ -91,10 +91,8 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
           {price > 0 ? `Rs. ${price}` : 'Free'}
         </div>
         <Button asChild>
-          <Link href={`/events/${id}`} onClick={(e) => hasTicket && status !== 'Live' && e.preventDefault()}>
-             <button onClick={handleButtonClick} className="w-full h-full flex items-center justify-center">
-                {renderButtonContent()}
-             </button>
+          <Link href={`/events/${id}`} onClick={handleButtonClick}>
+            {renderButtonContent()}
           </Link>
         </Button>
       </CardFooter>

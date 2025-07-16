@@ -30,7 +30,7 @@ export default function EventDetailPage() {
   }, [eventId, events]);
 
   const handleWatchNowClick = () => {
-    if (event?.status !== 'Live') {
+    if (event?.status === 'Upcoming') {
       toast({
         title: 'Event Not Live',
         description: 'This event has not started yet. Please check back later.',
@@ -52,6 +52,8 @@ export default function EventDetailPage() {
       </div>
     );
   }
+  
+  const canWatch = hasTicket && (event.status === 'Live' || event.status === 'Past');
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -65,7 +67,7 @@ export default function EventDetailPage() {
         </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          {hasTicket && event.status === 'Live' ? (
+          {canWatch ? (
             <div className="aspect-video w-full mb-8 rounded-lg overflow-hidden bg-black">
               <iframe
                 className="w-full h-full"
@@ -92,7 +94,7 @@ export default function EventDetailPage() {
           <p className="text-base md:text-lg text-foreground mb-8">{event.description}</p>
           
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-8">
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Event Details</CardTitle>
@@ -136,7 +138,7 @@ export default function EventDetailPage() {
                  <Button asChild className="w-full" size="lg">
                     <Link href={`/events/${event.id}/purchase`}>
                         <Ticket className="mr-2 h-4 w-4"/>
-                        Get Ticket {event.price > 0 ? ` for Rs. ${event.price}` : '(Free)'}
+                        Get Ticket {event.price > 0 ? `for Rs. ${event.price}` : '(Free)'}
                     </Link>
                 </Button>
               )}
