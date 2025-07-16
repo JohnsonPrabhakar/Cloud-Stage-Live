@@ -97,6 +97,7 @@ export default function CreateEventPage() {
         language: data.language as Event['language'],
         date: combinedDate,
         price: Number(data.price),
+        duration: Number(data.duration),
         thumbnailUrl: finalThumbnailUrl,
         videoUrl: embedUrl
     };
@@ -209,8 +210,8 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="space-y-2 md:col-span-2">
                 <Label>Date & Time</Label>
                 <div className="flex gap-2">
                     <Popover>
@@ -251,12 +252,16 @@ export default function CreateEventPage() {
                     />
                 </div>
             </div>
-
             <div className="space-y-2">
+                <Label htmlFor="duration">Duration (mins)</Label>
+                <Input id="duration" name="duration" type="number" placeholder="e.g., 90" required />
+            </div>
+          </div>
+          
+           <div className="space-y-2">
                 <Label htmlFor="price">Ticket Price (Rs.)</Label>
                 <Input id="price" name="price" type="number" placeholder="Enter 0 for free event" required />
             </div>
-          </div>
 
           <div className="flex justify-end">
             <Button type="submit">Submit for Approval</Button>

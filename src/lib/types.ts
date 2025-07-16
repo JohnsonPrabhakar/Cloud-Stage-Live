@@ -24,6 +24,7 @@ export type Event = {
   artist: string;
   artistId: string;
   date: Date;
+  duration: number; // Duration in minutes
   category: 'Music' | 'Stand-up' | 'Talk Show' | 'Workshop' | 'Purchase';
   language: 'English' | 'Spanish' | 'Hindi' | 'French';
   price: number;

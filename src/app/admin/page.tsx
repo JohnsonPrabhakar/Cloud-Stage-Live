@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Event } from '@/lib/types';
-import { Check, X, Eye, Calendar, DollarSign, Tag, Languages } from 'lucide-react';
+import { Check, X, Eye, Calendar, DollarSign, Tag, Languages, Timer } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import {
   Dialog,
@@ -68,6 +68,13 @@ const EventDetailsDialog = ({ event }: { event: Event }) => (
                     <div>
                         <h4 className="font-semibold">Language</h4>
                         <p className="text-sm text-muted-foreground">{event.language}</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-3">
+                    <Timer className="h-5 w-5 mt-1 text-primary"/>
+                    <div>
+                        <h4 className="font-semibold">Duration</h4>
+                        <p className="text-sm text-muted-foreground">{event.duration} minutes</p>
                     </div>
                 </div>
             </div>

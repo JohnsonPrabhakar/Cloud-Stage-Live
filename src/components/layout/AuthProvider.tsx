@@ -70,12 +70,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return {
               ...e,
               date,
-              status: getEventStatus(date),
+              duration: e.duration || 60, // Fallback for old events
+              status: getEventStatus(date, e.duration || 60),
             };
           });
           setEvents(parsedEvents);
       } else {
-        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date), status: getEventStatus(new Date(e.date)) }));
+        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date), status: getEventStatus(new Date(e.date), e.duration) }));
         setEvents(initialEvents);
         localStorage.setItem('events', JSON.stringify(initialEvents));
       }
@@ -330,7 +331,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       artist: user.name,
       artistId: user.id,
       approvalStatus: 'Pending',
-      status: getEventStatus(eventData.date),
+      status: getEventStatus(eventData.date, eventData.duration),
     };
 
     persistEvents([...events, newEvent]);
