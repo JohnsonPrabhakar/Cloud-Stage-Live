@@ -30,7 +30,7 @@ export default function UserLoginPage() {
     e.preventDefault();
     const success = login(loginEmail, loginPassword);
     if (success) {
-        toast({ title: 'Login Successful', description: 'Welcome back!' });
+        // Toast handled in AuthProvider
     } else {
         toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
@@ -40,7 +40,7 @@ export default function UserLoginPage() {
     e.preventDefault();
     const success = register(registerName, registerEmail, registerPassword);
     if (success) {
-        toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live!' });
+        toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live! Please log in.' });
     } else {
         toast({ title: 'Registration Failed', description: 'An account with this email already exists.', variant: 'destructive' });
     }
@@ -75,7 +75,7 @@ export default function UserLoginPage() {
               <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full">Login</Button>
                  <p className="text-center text-sm text-muted-foreground">
-                  Are you an artist or admin?{' '}
+                  Are you an artist?{' '}
                   <Link href="/admin-login" className="font-semibold text-primary hover:underline">
                     Login here
                   </Link>
