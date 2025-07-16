@@ -9,7 +9,8 @@ import { useAuth } from '@/hooks/use-auth';
 
 // This component now fetches data on the client side using the useAuth hook.
 function EventsGrid() {
-  const { events: allEvents } = useAuth();
+  const { events: allEvents, myTickets } = useAuth();
+  const myTicketEventIds = new Set(myTickets.map(t => t.eventId));
 
   const filteredEvents = allEvents.filter((event: Event) => {
     return event.approvalStatus === 'Approved';
@@ -27,7 +28,7 @@ function EventsGrid() {
       searchKeys={['title', 'artist']}
       categoryKey="category"
       languageKey="language"
-      renderItem={(event) => <EventCard key={event.id} item={event} />}
+      renderItem={(event) => <EventCard key={event.id} item={event} hasTicket={myTicketEventIds.has(event.id)} />}
       noResultsMessage="There are no events available at the moment. Please check back later."
     />
   );

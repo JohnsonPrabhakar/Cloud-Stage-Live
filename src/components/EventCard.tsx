@@ -11,9 +11,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Event } from '@/lib/types';
-import { Calendar, Ticket } from 'lucide-react';
+import { Calendar, Ticket, Eye } from 'lucide-react';
 
-export function EventCard({ item }: { item: Event }) {
+interface EventCardProps {
+    item: Event;
+    hasTicket?: boolean;
+    isArtistView?: boolean;
+}
+
+export function EventCard({ item, hasTicket = false, isArtistView = false }: EventCardProps) {
   const { id, title, artist, date, status, thumbnailUrl, price } = item;
   
   const getBadgeVariant = (status: Event['status']) => {
@@ -27,6 +33,19 @@ export function EventCard({ item }: { item: Event }) {
     }
   };
 
+  const renderButtonContent = () => {
+    if (isArtistView) {
+        return <>View Event</>;
+    }
+    if (hasTicket) {
+        return <>Watch Now</>;
+    }
+    if (status === 'Live') {
+        return 'Watch Now';
+    }
+    return <><Ticket className="mr-2 h-4 w-4"/>Get Ticket</>;
+  };
+
   return (
     <Card className="w-full overflow-hidden flex flex-col h-full transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0 relative">
@@ -38,6 +57,7 @@ export function EventCard({ item }: { item: Event }) {
             height={400}
             className="w-full h-48 object-cover"
             data-ai-hint="event poster"
+            unoptimized
           />
         </Link>
         <Badge variant={getBadgeVariant(status)} className="absolute top-2 right-2">
@@ -60,7 +80,7 @@ export function EventCard({ item }: { item: Event }) {
         </div>
         <Button asChild>
           <Link href={`/events/${id}`}>
-            {status === 'Live' ? 'Watch Now' : <><Ticket className="mr-2 h-4 w-4"/>Get Ticket</>}
+            {renderButtonContent()}
           </Link>
         </Button>
       </CardFooter>

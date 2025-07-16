@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -40,21 +41,21 @@ export default function ArtistDashboardPage() {
         <TabsContent value="upcoming">
           {upcomingEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {upcomingEvents.map(event => <EventCard key={event.id} item={event} />)}
+              {upcomingEvents.map(event => <EventCard key={event.id} item={event} isArtistView={true} />)}
             </div>
           ) : <p className="text-muted-foreground text-center py-8">No upcoming events.</p>}
         </TabsContent>
         <TabsContent value="live">
           {liveEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {liveEvents.map(event => <EventCard key={event.id} item={event} />)}
+              {liveEvents.map(event => <EventCard key={event.id} item={event} isArtistView={true} />)}
             </div>
           ) : <p className="text-muted-foreground text-center py-8">No events are currently live.</p>}
         </TabsContent>
         <TabsContent value="past">
           {pastEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {pastEvents.map(event => <EventCard key={event.id} item={event} />)}
+              {pastEvents.map(event => <EventCard key={event.id} item={event} isArtistView={true} />)}
             </div>
           ) : <p className="text-muted-foreground text-center py-8">No past events found.</p>}
         </TabsContent>
