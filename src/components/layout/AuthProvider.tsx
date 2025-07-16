@@ -246,7 +246,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Create the updated user object by merging current user data with new data.
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    try {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        toast({
+          title: "Profile Image Not Saved",
+          description: "Your profile picture could not be saved due to storage limits, but other changes were saved.",
+          variant: "destructive",
+        });
+        const userWithoutImage = { ...updatedUser, profilePictureUrl: user.profilePictureUrl };
+        localStorage.setItem('user', JSON.stringify(userWithoutImage));
+      }
+    }
+
 
     // Update the user in the main list of registered users as well.
     const updatedRegisteredUsers = registeredUsers.map(u => 

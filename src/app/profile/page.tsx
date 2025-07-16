@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [newImageSelected, setNewImageSelected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,19 +38,18 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
           toast({
               variant: 'destructive',
               title: 'Image too large',
-              description: 'Please upload an image smaller than 2MB.',
+              description: 'Please upload an image smaller than 5MB.',
           });
           return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-          const result = reader.result as string;
-          setImagePreview(result);
-          setImageData(result);
+          setImagePreview(reader.result as string);
+          setNewImageSelected(true);
       };
       reader.readAsDataURL(file);
     }
@@ -67,11 +66,14 @@ export default function ProfilePage() {
         name,
         interests: interests.split(',').map(i => i.trim()),
     };
-    if (imageData) {
-        profileUpdate.profilePictureUrl = imageData;
+    
+    if (newImageSelected) {
+        // Simulate upload by generating a new random avatar URL
+        profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${Date.now()}`;
     }
 
     updateUserProfile(profileUpdate);
+    setNewImageSelected(false);
   }
 
   if (isLoading || !user) {
@@ -96,7 +98,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center gap-4">
                      <Avatar className="h-24 w-24">
                       {imagePreview && <AvatarImage src={imagePreview} alt={user.name} />}
-                      <AvatarFallback className="text-3xl">{getInitials(user.name)}</AvatarFallback>
+                      <AvatarFallback className="text-3xl">{getInitials(name)}</AvatarFallback>
                     </Avatar>
                     <div>
                         <CardTitle className="text-2xl font-headline text-center">{name}</CardTitle>
@@ -121,7 +123,7 @@ export default function ProfilePage() {
                                  <Upload className="mr-2 h-4 w-4" />
                                  Change Image
                              </Button>
-                             <p className="text-sm text-muted-foreground">Upload a new profile picture (max 2MB).</p>
+                             <p className="text-sm text-muted-foreground">Upload a new profile picture.</p>
                          </div>
                     </div>
                     <div className="space-y-2">
