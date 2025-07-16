@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,7 @@ const chartConfig = {
     color: "hsl(var(--accent))",
   },
   revenue: {
-    label: "Revenue (₹)",
+    label: "Revenue (Rs.)",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
@@ -47,7 +48,7 @@ export default function ArtistAnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Rs. {totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">All time earnings</p>
           </CardContent>
         </Card>

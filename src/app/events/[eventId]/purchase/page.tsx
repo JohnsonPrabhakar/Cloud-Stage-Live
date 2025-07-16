@@ -95,12 +95,12 @@ export default function PurchasePage() {
             </div>
             <div className="flex justify-between items-center text-xl font-bold text-primary pt-4 border-t">
               <span>Total</span>
-              <span>{event.price > 0 ? `₹${event.price}` : 'Free'}</span>
+              <span>{event.price > 0 ? `Rs. ${event.price}` : 'Free'}</span>
             </div>
 
             <Button onClick={handlePurchase} className="w-full mt-6" size="lg">
                 <CreditCard className="mr-2 h-4 w-4" />
-                {event.price > 0 ? `Pay ₹${event.price}` : 'Get Free Ticket'}
+                {event.price > 0 ? `Pay Rs. ${event.price}` : 'Get Free Ticket'}
             </Button>
           </div>
         </CardContent>

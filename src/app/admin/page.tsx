@@ -53,7 +53,7 @@ const EventDetailsDialog = ({ event }: { event: Event }) => (
                     <DollarSign className="h-5 w-5 mt-1 text-primary"/>
                     <div>
                         <h4 className="font-semibold">Price</h4>
-                        <p className="text-sm text-muted-foreground">₹{event.price}</p>
+                        <p className="text-sm text-muted-foreground">Rs. {event.price}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -104,7 +104,7 @@ export default function AdminEventManagementPage() {
                         <TableCell className="font-medium">{event.title}</TableCell>
                         <TableCell>{event.artist}</TableCell>
                         <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-                        <TableCell>₹{event.price}</TableCell>
+                        <TableCell>Rs. {event.price}</TableCell>
                         <TableCell className="text-right space-x-1">
                             <Dialog>
                                 <DialogTrigger asChild>

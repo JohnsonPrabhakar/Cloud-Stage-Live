@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button"
@@ -65,7 +66,7 @@ export default function SubscriptionsPage() {
             <CardHeader className="text-center">
             <CardTitle className="font-headline text-3xl">Premium Plan</CardTitle>
             <CardDescription>Get the best of CloudStage Live.</CardDescription>
-            <p className="text-4xl font-bold text-primary pt-4">₹299<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+            <p className="text-4xl font-bold text-primary pt-4">Rs. 299<span className="text-lg font-normal text-muted-foreground">/month</span></p>
             </CardHeader>
             <CardContent>
                 <ul className="space-y-4">

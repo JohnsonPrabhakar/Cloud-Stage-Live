@@ -136,7 +136,7 @@ export default function EventDetailPage() {
                  <Button asChild className="w-full" size="lg">
                     <Link href={`/events/${event.id}/purchase`}>
                         <Ticket className="mr-2 h-4 w-4"/>
-                        Get Ticket {event.price > 0 ? ` for ₹${event.price}` : '(Free)'}
+                        Get Ticket {event.price > 0 ? ` for Rs. ${event.price}` : '(Free)'}
                     </Link>
                 </Button>
               )}

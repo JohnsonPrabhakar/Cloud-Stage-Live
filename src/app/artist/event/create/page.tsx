@@ -245,7 +245,7 @@ export default function CreateEventPage() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="price">Ticket Price (₹)</Label>
+                <Label htmlFor="price">Ticket Price (Rs.)</Label>
                 <Input id="price" name="price" type="number" placeholder="Enter 0 for free event" required />
             </div>
           </div>

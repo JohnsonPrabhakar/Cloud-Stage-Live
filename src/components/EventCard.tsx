@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -55,7 +56,7 @@ export function EventCard({ item }: { item: Event }) {
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center bg-muted/50">
         <div className="font-bold text-lg text-primary">
-          {price > 0 ? `₹${price}` : 'Free'}
+          {price > 0 ? `Rs. ${price}` : 'Free'}
         </div>
         <Button asChild>
           <Link href={`/events/${id}`}>
