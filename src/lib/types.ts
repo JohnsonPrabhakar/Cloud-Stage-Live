@@ -2,13 +2,14 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  password?: string; // Add password for mock auth
+  password?: string;
   interests?: string[];
   subscription?: {
     plan: 'Premium';
     expiryDate: Date;
     eventCount: number;
   };
+  role: Role;
 };
 
 export type Role = 'user' | 'artist' | 'admin' | null;
@@ -34,7 +35,7 @@ export type Movie = {
   title: string;
   description: string;
   thumbnailUrl: string;
-  videoUrl: string;
+  videoUrl:string;
   category: string;
   language: string;
 };
@@ -44,4 +45,17 @@ export type Ticket = {
   userId: string;
   eventId: string;
   purchaseDate: Date;
+};
+
+export type ArtistApplication = {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  location: string;
+  category: string;
+  contactNumber: string;
+  profileLink: string;
+  description: string;
 };

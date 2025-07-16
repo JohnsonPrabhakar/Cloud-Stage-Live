@@ -2,18 +2,18 @@
 'use client';
 
 import React, { useState, useEffect, ReactNode } from 'react';
-import type { User, Role } from '@/lib/types';
+import type { User, Role, ArtistApplication } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
-
-// Let's create a list of approved artist emails for our mock scenario
-const approvedArtistEmails = ['sarah.s@music.com', 'artist@example.com'];
+import { useToast } from '@/hooks/use-toast';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
+  const [artistApplications, setArtistApplications] = useState<ArtistApplication[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,12 +22,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = sessionStorage.getItem('user');
       const storedRole = sessionStorage.getItem('role') as Role;
       const storedRegisteredUsers = sessionStorage.getItem('registeredUsers');
+      const storedArtistApplications = sessionStorage.getItem('artistApplications');
+      
       if (storedUser && storedRole) {
         setUser(JSON.parse(storedUser));
         setRole(storedRole);
       }
       if (storedRegisteredUsers) {
         setRegisteredUsers(JSON.parse(storedRegisteredUsers));
+      }
+       if (storedArtistApplications) {
+        setArtistApplications(JSON.parse(storedArtistApplications));
+      } else {
+        // Add a default admin user if no users exist.
+        const adminUser: User = { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin123', role: 'admin' };
+        setRegisteredUsers([adminUser]);
+        sessionStorage.setItem('registeredUsers', JSON.stringify([adminUser]));
       }
     } catch (error) {
         console.error("Failed to parse session storage item.")
@@ -40,56 +50,94 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.setItem('registeredUsers', JSON.stringify(users));
   }
 
+  const persistApplications = (applications: ArtistApplication[]) => {
+    setArtistApplications(applications);
+    sessionStorage.setItem('artistApplications', JSON.stringify(applications));
+  }
+
   const login = (email: string, pass: string): boolean => {
     setIsLoading(true);
-    let loggedInUser: User | null = null;
-    let loggedInRole: Role = null;
+    const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
 
-    if (email === 'admin@cloudstage.live' && pass === 'admin123') {
-      loggedInUser = { id: 'admin', name: 'Admin', email };
-      loggedInRole = 'admin';
-      router.push('/admin');
-    } else if (approvedArtistEmails.includes(email) && pass === 'password123') { // Artists use a standard password for mock
-      loggedInUser = { id: `artist-${email}`, name: 'Verified Artist', email };
-      loggedInRole = 'artist';
-      router.push('/artist/dashboard');
-    } else {
-      const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
-      if (foundUser) {
-        loggedInUser = foundUser;
-        loggedInRole = 'user';
-        router.push('/');
-      }
+    if (!foundUser) {
+        setIsLoading(false);
+        return false;
     }
 
-    if (loggedInUser && loggedInRole) {
-      setUser(loggedInUser);
-      setRole(loggedInRole);
-      sessionStorage.setItem('user', JSON.stringify(loggedInUser));
-      sessionStorage.setItem('role', loggedInRole);
-      setIsLoading(false);
-      return true;
+    // Check if the user is trying to log in as an artist but is pending
+    const application = artistApplications.find(app => app.email === email);
+    if(foundUser.role === 'artist' && application?.status === 'Pending') {
+         toast({
+            title: 'Application Pending',
+            description: 'Your artist application is still under review. Please wait for admin approval.',
+            variant: 'destructive'
+        });
+        setIsLoading(false);
+        return false;
     }
     
+    setUser(foundUser);
+    setRole(foundUser.role);
+    sessionStorage.setItem('user', JSON.stringify(foundUser));
+    sessionStorage.setItem('role', foundUser.role);
+
+    if (foundUser.role === 'admin') router.push('/admin');
+    else if (foundUser.role === 'artist') router.push('/artist/dashboard');
+    else router.push('/');
+
     setIsLoading(false);
-    return false;
+    return true;
   };
 
   const register = (name: string, email: string, pass: string): boolean => {
     if (registeredUsers.some(u => u.email === email)) {
       return false; // User already exists
     }
-    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass };
+    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass, role: 'user' };
     persistUsers([...registeredUsers, newUser]);
     return login(email, pass);
   };
 
 
-  const artistRegister = (details: Omit<User, 'id'>) => {
-     // In a real app, this would hit a backend endpoint to save the application.
-     // The current flow redirects to login, so no state change is needed here.
-     console.log("Artist application submitted:", details);
-     // We don't log them in. We just show the application was submitted.
+  const artistRegister = (application: ArtistApplication) => {
+     if (registeredUsers.some(u => u.email === application.email)) {
+        // This is an existing user applying to be an artist
+        const updatedUsers = registeredUsers.map(u => u.email === application.email ? { ...u, role: 'artist' } : u);
+        persistUsers(updatedUsers);
+     } else {
+        // This is a new artist registration
+        const newUser: User = { 
+            id: `artist-${Date.now()}`,
+            name: application.name,
+            email: application.email,
+            password: application.password, // Assuming password is in the form
+            role: 'artist' 
+        };
+        persistUsers([...registeredUsers, newUser]);
+     }
+     
+     persistApplications([...artistApplications, application]);
+     
+     toast({
+      title: 'Application Submitted!',
+      description: 'Your application is pending review. We will notify you via email upon approval.',
+    });
+    router.push('/admin-login');
+  };
+
+  const updateApplicationStatus = (applicationId: string, status: 'Approved' | 'Rejected') => {
+      const updatedApplications = artistApplications.map(app => 
+          app.id === applicationId ? { ...app, status } : app
+      );
+      persistApplications(updatedApplications);
+
+      const applicant = updatedApplications.find(app => app.id === applicationId);
+      if (applicant && status === 'Rejected') {
+           const updatedUsers = registeredUsers.map(u => 
+              u.email === applicant.email ? { ...u, role: 'user' } : u
+          );
+          persistUsers(updatedUsers);
+      }
   };
 
   const logout = () => {
@@ -111,6 +159,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     artistRegister,
     logout,
     registeredUsers,
+    artistApplications,
+    updateApplicationStatus
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;

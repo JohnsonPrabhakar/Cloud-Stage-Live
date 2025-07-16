@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlignJustify, User, LogOut, LayoutDashboard, Ticket, Settings } from 'lucide-react';
+import { AlignJustify, User, LogOut, LayoutDashboard, Ticket, Settings, Mic } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/Logo';
 import {
@@ -111,6 +111,7 @@ export default function Header() {
                     <>
                       <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/my-tickets"><Ticket className="mr-2 h-4 w-4" />My Tickets</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/artist-register"><Mic className="mr-2 h-4 w-4" />Become an Artist</Link></DropdownMenuItem>
                     </>
                   )}
                   {role === 'artist' && (

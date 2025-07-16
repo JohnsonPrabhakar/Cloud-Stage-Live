@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
@@ -17,21 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-
-type ArtistApplication = {
-  id: string;
-  name: string;
-  email: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  location: string;
-  category: string;
-  contactNumber: string;
-  profileLink: string;
-  description: string;
-};
-
-// In a real app, this would be fetched from an API
-const initialApplications: ArtistApplication[] = [];
+import type { ArtistApplication } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
     <DialogContent className="sm:max-w-[625px]">
@@ -72,18 +58,17 @@ const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
 
 export default function ArtistRegistrationsPage() {
   const { toast } = useToast();
-  const [applications, setApplications] = useState(initialApplications);
+  const { artistApplications, updateApplicationStatus } = useAuth();
 
   const handleStatusChange = (id: string, status: 'Approved' | 'Rejected') => {
-    // In a real app, you would make an API call to update the status.
-    setApplications(apps => apps.map(app => app.id === id ? { ...app, status } : app));
+    updateApplicationStatus(id, status);
     toast({
       title: `Application ${status}`,
-      description: `An email notification has been sent to the artist.`
+      description: `The artist's status has been updated.`
     });
   };
 
-  const pendingApps = applications.filter(app => app.status === 'Pending');
+  const pendingApps = artistApplications.filter(app => app.status === 'Pending');
 
   return (
     <div>

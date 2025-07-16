@@ -1,4 +1,4 @@
-import type {User, Role} from '@/lib/types';
+import type {User, Role, ArtistApplication} from '@/lib/types';
 import {createContext} from 'react';
 
 interface AuthContextType {
@@ -6,10 +6,15 @@ interface AuthContextType {
   role: Role;
   isLoading: boolean;
   registeredUsers: User[];
+  artistApplications: ArtistApplication[];
   login: (email: string, pass: string) => boolean;
   register: (name: string, email: string, pass: string) => boolean;
-  artistRegister: (details: Omit<User, 'id'>) => void;
+  artistRegister: (application: ArtistApplication) => void;
   logout: () => void;
+  updateApplicationStatus: (
+    applicationId: string,
+    status: 'Approved' | 'Rejected'
+  ) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

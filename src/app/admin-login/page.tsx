@@ -27,11 +27,7 @@ export default function AdminLoginPage() {
     const isSuccess = login(email, password);
 
     if (isSuccess) {
-        if(email === 'admin@cloudstage.live') {
-            toast({ title: 'Admin Login Successful', description: 'Welcome, Admin!' });
-        } else {
-            toast({ title: 'Artist Login Successful', description: 'Welcome back!' });
-        }
+      // The toast is now handled inside AuthProvider based on role
     } else {
         toast({
             title: 'Login Failed',

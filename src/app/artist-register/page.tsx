@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
   Dialog,
@@ -21,7 +20,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRouter } from 'next/navigation';
 
 const PolicyContent = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <DialogContent className="sm:max-w-[625px]">
@@ -41,8 +39,6 @@ const PolicyContent = ({ title, children }: { title: string, children: React.Rea
 
 export default function ArtistRegisterPage() {
   const { artistRegister } = useAuth();
-  const { toast } = useToast();
-  const router = useRouter();
 
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeRefund, setAgreeRefund] = useState(false);
@@ -50,28 +46,25 @@ export default function ArtistRegisterPage() {
   
   const canSubmit = agreeTerms && agreeRefund && agreePrivacy;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmit) {
-      toast({
-        title: 'Agreement Required',
-        description: 'You must agree to all policies to register.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    // In a real app, form data would be sent to the backend.
-    // We get the name and email for the toast message.
-    const form = e.target as HTMLFormElement;
-    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
 
-    artistRegister({ name, email });
-    toast({
-      title: 'Application Submitted!',
-      description: 'Your application is pending review. We will notify you via email upon approval.',
-    });
-    router.push('/admin-login');
+    const newApplication = {
+        id: `app-${Date.now()}`,
+        name: data.name as string,
+        email: data.email as string,
+        password: data.password as string,
+        contactNumber: data.contactNumber as string,
+        location: data.location as string,
+        category: data.category as string,
+        profileLink: data.profileLink as string,
+        description: data.description as string,
+        status: 'Pending' as const,
+    };
+    
+    artistRegister(newApplication);
   };
 
   return (
