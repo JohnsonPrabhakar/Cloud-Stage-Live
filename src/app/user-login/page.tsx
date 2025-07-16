@@ -1,0 +1,105 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+
+export default function UserLoginPage() {
+  const { login } = useAuth();
+  const { toast } = useToast();
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    login(loginEmail, loginPassword);
+    toast({ title: 'Login Successful', description: 'Welcome back!' });
+  };
+  
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    // This is a mock registration. In a real app, you would also call a registration endpoint.
+    login(registerEmail, registerPassword); 
+    toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live!' });
+  };
+
+  return (
+    <div className="flex items-center justify-center py-12 px-4">
+      <Tabs defaultValue="login" className="w-full max-w-md">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="login">Login</TabsTrigger>
+          <TabsTrigger value="register">Register</TabsTrigger>
+        </TabsList>
+        <TabsContent value="login">
+          <Card>
+            <form onSubmit={handleLogin}>
+              <CardHeader>
+                <CardTitle className="font-headline">User Login</CardTitle>
+                <CardDescription>
+                  Access your account to view your tickets and events.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input id="login-email" type="email" placeholder="you@example.com" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="w-full">Login</Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+        <TabsContent value="register">
+          <Card>
+            <form onSubmit={handleRegister}>
+              <CardHeader>
+                <CardTitle className="font-headline">Create an Account</CardTitle>
+                <CardDescription>
+                  Join our community of live event enthusiasts.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="register-name">Full Name</Label>
+                  <Input id="register-name" placeholder="Your Name" required value={registerName} onChange={(e) => setRegisterName(e.target.value)}/>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input id="register-email" type="email" placeholder="you@example.com" required value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-password">Password</Label>
+                  <Input id="register-password" type="password" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="w-full">Register</Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
