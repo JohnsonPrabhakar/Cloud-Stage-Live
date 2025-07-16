@@ -42,7 +42,6 @@ export default function AdminLayout({
     { href: '/admin', label: 'Event Management', icon: Music, notificationCount: pendingEventCount },
     { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
     { href: '/admin/users', label: 'Users', icon: Users },
-    { href: '/admin/artist-management', label: 'Artists', icon: UserSquare },
     { href: '/admin/movies', label: 'Movies', icon: Film },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   ];
