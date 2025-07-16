@@ -16,12 +16,11 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProfilePage() {
   const { user, isLoading, updateUserProfile } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
 
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [newImageSelected, setNewImageSelected] = useState(false);
+  const [imageData, setImageData] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,18 +37,11 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          toast({
-              variant: 'destructive',
-              title: 'Image too large',
-              description: 'Please upload an image smaller than 5MB.',
-          });
-          return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => {
-          setImagePreview(reader.result as string);
-          setNewImageSelected(true);
+          const result = reader.result as string;
+          setImagePreview(result);
+          setImageData(result);
       };
       reader.readAsDataURL(file);
     }
@@ -67,13 +59,12 @@ export default function ProfilePage() {
         interests: interests.split(',').map(i => i.trim()),
     };
     
-    if (newImageSelected) {
-        // Simulate upload by generating a new random avatar URL
-        profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${Date.now()}`;
+    if (imageData) {
+        profileUpdate.profilePictureUrl = imageData;
     }
 
     updateUserProfile(profileUpdate);
-    setNewImageSelected(false);
+    setImageData(null); // Reset after submission attempt
   }
 
   if (isLoading || !user) {

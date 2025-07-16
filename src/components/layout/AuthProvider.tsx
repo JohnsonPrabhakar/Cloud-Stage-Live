@@ -253,11 +253,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         toast({
           title: "Profile Image Not Saved",
-          description: "Your profile picture could not be saved due to storage limits, but other changes were saved.",
+          description: "Your profile picture is too large to be saved in the browser. Please choose a smaller file. Other changes were saved.",
           variant: "destructive",
         });
+        // Revert image change but keep other data
         const userWithoutImage = { ...updatedUser, profilePictureUrl: user.profilePictureUrl };
         localStorage.setItem('user', JSON.stringify(userWithoutImage));
+        setUser(userWithoutImage);
       }
     }
 

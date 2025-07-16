@@ -17,7 +17,7 @@ export default function EditArtistProfilePage() {
     const { toast } = useToast();
     const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [newImageSelected, setNewImageSelected] = useState(false);
+    const [imageData, setImageData] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -40,8 +40,9 @@ export default function EditArtistProfilePage() {
             }
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-                setNewImageSelected(true);
+                const result = reader.result as string;
+                setImagePreview(result);
+                setImageData(result);
             };
             reader.readAsDataURL(file);
         }
@@ -56,13 +57,12 @@ export default function EditArtistProfilePage() {
         
         const profileUpdate: Partial<typeof user> = { name };
         
-        if (newImageSelected) {
-            // Simulate upload by generating a new random avatar URL
-            profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${Date.now()}`;
+        if (imageData) {
+            profileUpdate.profilePictureUrl = imageData;
         }
 
         updateUserProfile(profileUpdate);
-        setNewImageSelected(false); // Reset after submission
+        setImageData(null); // Reset after submission attempt
     };
 
     const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
