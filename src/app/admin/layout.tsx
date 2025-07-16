@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarGroup } from '@/components/ui/sidebar';
 import { LayoutDashboard, Music, User, BarChart, PlusCircle, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -46,18 +46,20 @@ export default function AdminLayout({
           <Logo />
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {menuItems.map(item => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
-                    <SidebarMenuButton isActive={pathname === item.href}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+          <SidebarGroup>
+            <SidebarMenu>
+              {menuItems.map(item => (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href}>
+                      <SidebarMenuButton isActive={pathname === item.href}>
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                      </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
