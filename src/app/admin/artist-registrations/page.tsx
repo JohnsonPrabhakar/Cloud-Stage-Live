@@ -24,7 +24,7 @@ const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
         <DialogHeader>
             <DialogTitle className="font-headline flex items-center gap-4">
                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={app.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${app.email}`} />
+                    <AvatarImage src={app.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${app.email}`} alt={app.name} />
                     <AvatarFallback>{app.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span>{app.name}</span>
