@@ -10,6 +10,7 @@ export type User = {
     eventCount: number;
   };
   role: Role;
+  applicationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
 };
 
 export type Role = 'user' | 'artist' | 'admin' | null;
@@ -21,7 +22,7 @@ export type Event = {
   artist: string;
   artistId: string;
   date: Date;
-  category: 'Music' | 'Stand-up' | 'Talk Show' | 'Workshop';
+  category: 'Music' | 'Stand-up' | 'Talk Show' | 'Workshop' | 'Purchase';
   language: 'English' | 'Spanish' | 'Hindi' | 'French';
   price: number;
   thumbnailUrl: string;

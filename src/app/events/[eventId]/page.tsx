@@ -31,12 +31,6 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
       </div>
     );
   }
-  
-  const handleGetTicket = () => {
-    // This function will need to be moved to a client component
-    // to handle user interaction (e.g., in a separate <GetTicketButton /> component)
-    console.log("Purchase logic would be here.");
-  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -120,7 +114,6 @@ export default function EventDetailPage({ params }: { params: { eventId: string 
               </div>
             </CardContent>
             <div className="p-6">
-               {/* This button needs to be a client component to handle onClick */}
               {hasTicket ? (
                 <Button disabled className="w-full"><Ticket className="mr-2 h-4 w-4"/> You have a ticket</Button>
               ) : (
