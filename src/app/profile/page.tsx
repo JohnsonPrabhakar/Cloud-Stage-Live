@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
@@ -19,6 +19,8 @@ export default function ProfilePage() {
 
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -27,8 +29,24 @@ export default function ProfilePage() {
     if (user) {
         setName(user.name);
         setInterests(user.interests?.join(', ') || 'Music, Comedy, Technology');
+        setImagePreview(`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
     }
   }, [user, isLoading, router]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +78,7 @@ export default function ProfilePage() {
             <CardHeader>
                 <div className="flex flex-col items-center gap-4">
                      <Avatar className="h-24 w-24">
-                      <AvatarImage src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} alt={user.name} />
+                      {imagePreview && <AvatarImage src={imagePreview} alt={user.name} />}
                       <AvatarFallback className="text-3xl">{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -71,6 +89,24 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                     <div className="space-y-2">
+                         <Label>Profile Picture</Label>
+                         <div className="flex items-center gap-4">
+                            <Input 
+                                id="picture" 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageChange} 
+                                className="hidden"
+                                ref={fileInputRef}
+                                />
+                             <Button type="button" variant="outline" onClick={handleUploadClick}>
+                                 <Upload className="mr-2 h-4 w-4" />
+                                 Change Image
+                             </Button>
+                             <p className="text-sm text-muted-foreground">Upload a new profile picture.</p>
+                         </div>
+                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
