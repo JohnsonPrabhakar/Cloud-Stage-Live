@@ -35,11 +35,8 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-        // Simulate upload by generating a new placeholder URL.
-        // This avoids storing large Base64 strings in localStorage.
-        const newSeed = Date.now().toString();
-        const newImageUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${newSeed}`;
-        setImagePreview(newImageUrl);
+        const previewUrl = URL.createObjectURL(file);
+        setImagePreview(previewUrl);
     }
   };
 
@@ -49,10 +46,16 @@ export default function ProfilePage() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Simulate upload by generating a new placeholder URL to save.
+    // This avoids storing large Base64 strings in localStorage.
+    const newSeed = Date.now().toString();
+    const newImageUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${newSeed}`;
+
     updateUserProfile({
         name,
         interests: interests.split(',').map(i => i.trim()),
-        profilePictureUrl: imagePreview ?? undefined,
+        profilePictureUrl: newImageUrl,
     });
   }
 
