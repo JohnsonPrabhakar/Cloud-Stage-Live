@@ -31,6 +31,7 @@ export default function Header() {
   const { user, role, logout } = useAuth();
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
   
@@ -92,7 +93,7 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} alt={user.name} />
+                      <AvatarImage src={user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} alt={user.name} />
                       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                   </Button>

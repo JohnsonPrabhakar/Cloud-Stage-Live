@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { ArrowLeft, Upload } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, updateUserProfile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -29,7 +29,7 @@ export default function ProfilePage() {
     if (user) {
         setName(user.name);
         setInterests(user.interests?.join(', ') || 'Music, Comedy, Technology');
-        setImagePreview(`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
+        setImagePreview(user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
     }
   }, [user, isLoading, router]);
 
@@ -50,7 +50,11 @@ export default function ProfilePage() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd call an API to update the user's profile
+    updateUserProfile({
+        name,
+        interests: interests.split(',').map(i => i.trim()),
+        profilePictureUrl: imagePreview ?? undefined,
+    });
     toast({
         title: "Profile Updated",
         description: "Your changes have been saved successfully."
@@ -61,7 +65,7 @@ export default function ProfilePage() {
     return <p className="p-8 text-center">Loading your profile...</p>;
   }
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (name: string) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : '';
 
   return (
     <div className="container mx-auto max-w-2xl py-12">

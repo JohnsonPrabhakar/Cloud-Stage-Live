@@ -4,6 +4,7 @@ export type User = {
   email: string;
   password?: string;
   interests?: string[];
+  profilePictureUrl?: string;
   subscription?: {
     plan: 'Premium';
     expiryDate: Date;

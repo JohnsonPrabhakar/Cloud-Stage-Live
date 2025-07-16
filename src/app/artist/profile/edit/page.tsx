@@ -13,14 +13,16 @@ import type React from "react";
 import { Upload } from "lucide-react";
 
 export default function EditArtistProfilePage() {
-    const { user } = useAuth();
+    const { user, updateUserProfile } = useAuth();
     const { toast } = useToast();
+    const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (user) {
-            setImagePreview(`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
+            setName(user.name);
+            setImagePreview(user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
         }
     }, [user]);
 
@@ -41,13 +43,17 @@ export default function EditArtistProfilePage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        updateUserProfile({
+            name,
+            profilePictureUrl: imagePreview ?? undefined,
+        });
         toast({
             title: "Profile Updated",
             description: "Your changes have been saved successfully."
         });
     };
 
-    const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const getInitials = (name: string) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : '';
 
     if (!user) return null;
 
@@ -84,7 +90,7 @@ export default function EditArtistProfilePage() {
                     
                     <div className="space-y-2">
                         <Label htmlFor="name">Artist/Band Name</Label>
-                        <Input id="name" defaultValue={user.name} />
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     
                     <div className="space-y-2">

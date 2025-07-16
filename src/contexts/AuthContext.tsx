@@ -15,6 +15,7 @@ interface AuthContextType {
     applicationId: string,
     status: 'Approved' | 'Rejected'
   ) => void;
+  updateUserProfile: (updatedUser: Partial<User>) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
