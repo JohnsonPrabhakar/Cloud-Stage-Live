@@ -40,7 +40,7 @@ export default function AdminLayout({
   const menuItems = [
     { href: '/admin', label: 'Event Management', icon: Music, notificationCount: pendingEventCount },
     { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
-    { href: '/admin/users', label: 'User Management', icon: Users },
+    { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/artist-management', label: 'Artist Management', icon: UserSquare },
     { href: '/admin/add-movie', label: 'Add Movie', icon: PlusCircle },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
