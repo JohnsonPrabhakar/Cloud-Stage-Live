@@ -433,9 +433,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     deleteMovie,
     myTickets,
     purchaseTicket,
+    allTickets,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
 };
-
-    

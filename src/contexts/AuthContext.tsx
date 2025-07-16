@@ -10,6 +10,7 @@ interface AuthContextType {
   events: Event[];
   movies: Movie[];
   myTickets: Ticket[];
+  allTickets: Ticket[];
   login: (email: string, pass: string) => boolean;
   register: (name: string, email: string, pass: string, phoneNumber: string) => boolean;
   artistRegister: (application: Omit<ArtistApplication, 'id' | 'status'>) => void;
@@ -31,5 +32,3 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
-
-    
