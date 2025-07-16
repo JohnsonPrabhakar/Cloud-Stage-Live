@@ -43,13 +43,16 @@ export default function AddMoviePage() {
         const submittedVideoUrl = (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Default placeholder
         const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
+        // Convert watch URL to embed URL
+        const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
+
         const newMovie = {
             title: data.title as string,
             description: data.description as string,
             category: data.category as string,
             language: data.language as string,
             thumbnailUrl: thumbnailUrl,
-            videoUrl: submittedVideoUrl,
+            videoUrl: embedUrl,
         };
         
         createMovie(newMovie);
