@@ -8,13 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type React from "react";
+import { Upload } from "lucide-react";
 
 export default function EditArtistProfilePage() {
     const { user } = useAuth();
     const { toast } = useToast();
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (user) {
@@ -31,6 +33,10 @@ export default function EditArtistProfilePage() {
             };
             reader.readAsDataURL(file);
         }
+    };
+    
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -59,8 +65,19 @@ export default function EditArtistProfilePage() {
                             <AvatarFallback className="text-3xl">{getInitials(user.name)}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                             <Label htmlFor="picture">Change Profile Picture</Label>
-                             <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} />
+                             <Label>Profile Picture</Label>
+                             <Input 
+                                id="picture" 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageChange} 
+                                className="hidden"
+                                ref={fileInputRef}
+                              />
+                             <Button type="button" variant="outline" onClick={handleUploadClick}>
+                                 <Upload className="mr-2 h-4 w-4" />
+                                 Change Image
+                             </Button>
                              <p className="text-xs text-muted-foreground">Upload a new profile picture.</p>
                         </div>
                     </div>
