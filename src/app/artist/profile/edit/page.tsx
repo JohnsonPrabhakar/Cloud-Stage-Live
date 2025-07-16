@@ -27,11 +27,11 @@ export default function EditArtistProfilePage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            // Simulate upload by generating a new placeholder URL.
+            // This avoids storing large Base64 strings in localStorage.
+            const newSeed = Date.now().toString();
+            const newImageUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${newSeed}`;
+            setImagePreview(newImageUrl);
         }
     };
     

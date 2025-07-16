@@ -52,7 +52,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
        if (storedArtistApplications) {
-        const parsedArtistApplications = JSON.parse(storedArtistApplications);
+        const parsedArtistApplications = JSON.parse(storedArtistApplications).map((app: ArtistApplication) => ({
+            ...app,
+            // Fallback for old data that might not have this URL
+            artistImageUrl: app.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${app.email}`
+        }));
         setArtistApplications(parsedArtistApplications);
       }
 
@@ -153,7 +157,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       return false; 
     }
-    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass, phoneNumber, role: 'user', applicationStatus: 'none' };
+    const newUser: User = { 
+      id: `user-${Date.now()}`, 
+      name, 
+      email, 
+      password: pass, 
+      phoneNumber, 
+      role: 'user', 
+      applicationStatus: 'none',
+      profilePictureUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${email}`
+    };
     persistUsers([...registeredUsers, newUser]);
     
     toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });
@@ -161,17 +174,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const artistRegister = (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
-     if (registeredUsers.some(u => u.email === applicationData.email && u.role === 'admin')) {
+     if (registeredUsers.some(u => u.email === applicationData.email)) {
        toast({
           title: 'Application Failed',
-          description: 'An admin account with this email already exists.',
+          description: 'An account with this email already exists.',
           variant: 'destructive'
         });
        return;
      }
 
      const existingApplication = artistApplications.find(app => app.email === applicationData.email);
-     if (existingApplication && (existingApplication.status === 'Pending' || existingApplication.status === 'Approved')) {
+     if (existingApplication && (existingApplication.status.toLowerCase() === 'pending' || existingApplication.status.toLowerCase() === 'approved')) {
        toast({
          title: 'Application Exists',
          description: 'An application with this email is already pending or has been approved.',
@@ -184,6 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ...applicationData,
         id: `app-${Date.now()}`,
         status: 'Pending',
+        artistImageUrl: applicationData.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
      }
      
      const newArtistUser: User = { 
@@ -192,7 +206,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
        email: newApplication.email,
        password: newApplication.password,
        role: 'artist',
-       applicationStatus: 'pending'
+       applicationStatus: 'pending',
+       profilePictureUrl: newApplication.artistImageUrl,
      };
      persistUsers([...registeredUsers, newArtistUser]);
      persistApplications([...artistApplications, newApplication]);
@@ -218,12 +233,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       persistApplications(updatedApplications);
 
-      const updatedUsers = registeredUsers.map(u => {
-        if (u.email !== appToUpdate.email) return u;
-        
-        const newStatus = status === 'Approved' ? 'approved' : 'rejected';
-        return { ...u, applicationStatus: newStatus as User['applicationStatus'] };
-      });
+      const newStatus = status === 'Approved' ? 'approved' : 'rejected';
+      const updatedUsers = registeredUsers.map(u => 
+        u.email === appToUpdate.email ? { ...u, applicationStatus: newStatus as User['applicationStatus'] } : u
+      );
       persistUsers(updatedUsers);
   };
 
@@ -293,6 +306,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: 'Event Submitted!',
       description: 'Your event has been submitted for approval.'
     });
+    router.push('/artist/dashboard');
   };
 
   const createMovie = (movieData: Omit<Movie, 'id'>) => {
