@@ -18,6 +18,8 @@ import { Logo } from '@/components/Logo';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import type { Role } from '@/lib/types';
@@ -59,6 +61,9 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
+               <SheetHeader>
+                <SheetTitle className="sr-only">Main Menu</SheetTitle>
+              </SheetHeader>
               <div className="py-4">
                 <Logo />
               </div>
