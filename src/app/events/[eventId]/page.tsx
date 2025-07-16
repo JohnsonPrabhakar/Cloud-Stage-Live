@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Calendar, Languages, MessageSquare, Ticket, User, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, Languages, Ticket, User, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
 import Link from 'next/link';
@@ -80,18 +80,6 @@ export default function EventDetailPage() {
           <h1 className="text-3xl md:text-5xl font-headline font-bold text-primary mb-4">{event.title}</h1>
           <p className="text-base md:text-lg text-foreground mb-8">{event.description}</p>
           
-           <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline">
-                <MessageSquare /> Live Chat
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center bg-muted rounded-md">
-                <p className="text-muted-foreground">{hasTicket ? 'Chat is loading...' : 'Purchase a ticket to join the chat.'}</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
         <div className="lg:col-span-1">
           <Card>
