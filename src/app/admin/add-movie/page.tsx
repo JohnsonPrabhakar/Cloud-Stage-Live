@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AddMoviePage() {
     const { toast } = useToast();
@@ -74,14 +75,35 @@ export default function AddMoviePage() {
                     </Select>
                 </div>
             </div>
-             <div className="space-y-2">
-              <Label htmlFor="videoUrl">Video URL</Label>
-              <Input id="videoUrl" placeholder="e.g., https://youtube.com/embed/..." required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="thumbnail">Movie Thumbnail</Label>
-              <Input id="thumbnail" type="file" required />
-            </div>
+
+            <Tabs defaultValue="url" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url">Add via URL</TabsTrigger>
+                <TabsTrigger value="upload">Upload File</TabsTrigger>
+              </TabsList>
+              <TabsContent value="url" className="pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="videoUrl">Video URL</Label>
+                  <Input id="videoUrl" name="videoUrl" placeholder="e.g., https://youtube.com/embed/..." />
+                  <p className="text-xs text-muted-foreground">
+                    The thumbnail will be automatically fetched from the video link.
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="upload" className="pt-4">
+                 <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="movieFile">Movie File</Label>
+                      <Input id="movieFile" name="movieFile" type="file" />
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="thumbnailFile">Movie Thumbnail</Label>
+                      <Input id="thumbnailFile" name="thumbnailFile" type="file" />
+                    </div>
+                 </div>
+              </TabsContent>
+            </Tabs>
+            
             <div className="flex justify-end">
               <Button type="submit">Add Movie</Button>
             </div>
