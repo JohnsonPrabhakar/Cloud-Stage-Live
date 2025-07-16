@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { Event } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -57,4 +58,18 @@ export function convertToEmbedUrl(url: string): string | null {
     }
     // If we can't get an ID, we shouldn't return a broken URL
     return null;
+}
+
+export function getEventStatus(eventDate: Date): Event['status'] {
+  const now = new Date();
+  const eventTime = new Date(eventDate);
+  const threeHours = 3 * 60 * 60 * 1000;
+
+  if (eventTime > now) {
+    return 'Upcoming';
+  } else if (now.getTime() - eventTime.getTime() < threeHours) {
+    return 'Live';
+  } else {
+    return 'Past';
+  }
 }

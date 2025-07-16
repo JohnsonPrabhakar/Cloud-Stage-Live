@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockEvents, mockMovies, mockTickets as initialMockTickets } from '@/lib/mock-data';
+import { getEventStatus } from '@/lib/utils';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -64,10 +65,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (storedEvents) {
-          const parsedEvents = JSON.parse(storedEvents).map((e: Event) => ({...e, date: new Date(e.date)}));
+          const parsedEvents = JSON.parse(storedEvents).map((e: Omit<Event, 'status'> & {date: string}) => {
+            const date = new Date(e.date);
+            return {
+              ...e,
+              date,
+              status: getEventStatus(date),
+            };
+          });
           setEvents(parsedEvents);
       } else {
-        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date) }));
+        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date), status: getEventStatus(new Date(e.date)) }));
         setEvents(initialEvents);
         localStorage.setItem('events', JSON.stringify(initialEvents));
       }
@@ -322,7 +330,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       artist: user.name,
       artistId: user.id,
       approvalStatus: 'Pending',
-      status: new Date(eventData.date) > new Date() ? 'Upcoming' : 'Past',
+      status: getEventStatus(eventData.date),
     };
 
     persistEvents([...events, newEvent]);

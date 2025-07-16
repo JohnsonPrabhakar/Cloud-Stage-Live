@@ -35,10 +35,10 @@ export default function Home() {
 
 
   const approvedEvents = events.filter(e => e.approvalStatus === 'Approved');
-  const now = new Date();
+  
   const liveEvents = approvedEvents.filter(e => e.status === 'Live');
-  const upcomingEvents = approvedEvents.filter(e => e.status === 'Upcoming' && new Date(e.date) > now);
-  const pastEvents = approvedEvents.filter(e => e.status === 'Past' || new Date(e.date) <= now);
+  const upcomingEvents = approvedEvents.filter(e => e.status === 'Upcoming');
+  const pastEvents = approvedEvents.filter(e => e.status === 'Past');
   const featuredMovies = movies.slice(0, 5);
 
   return (
