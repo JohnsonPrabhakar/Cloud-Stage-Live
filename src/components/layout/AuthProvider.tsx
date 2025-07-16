@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (foundUser.role === 'artist') {
         const application = artistApplications.find(app => app.email === email);
-        if (application && application.status !== 'Approved') {
+        if (!application || application.status !== 'Approved') {
             toast({
                 title: 'Application Not Approved',
                 description: 'Your artist application is still pending or has been rejected.',
