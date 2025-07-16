@@ -10,11 +10,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import type React from "react";
 import { Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EditArtistProfilePage() {
     const { user, updateUserProfile } = useAuth();
+    const { toast } = useToast();
     const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageData, setImageData] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -27,8 +30,21 @@ export default function EditArtistProfilePage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const previewUrl = URL.createObjectURL(file);
-            setImagePreview(previewUrl);
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    variant: 'destructive',
+                    title: 'Image too large',
+                    description: 'Please upload an image smaller than 2MB.',
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setImagePreview(result);
+                setImageData(result);
+            };
+            reader.readAsDataURL(file);
         }
     };
     
@@ -38,15 +54,13 @@ export default function EditArtistProfilePage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate upload by generating a new placeholder URL to save.
-        // This avoids storing large Base64 strings in localStorage.
-        const newSeed = Date.now().toString();
-        const newImageUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${newSeed}`;
+        
+        const profileUpdate: Partial<typeof user> = { name };
+        if (imageData) {
+            profileUpdate.profilePictureUrl = imageData;
+        }
 
-        updateUserProfile({
-            name,
-            profilePictureUrl: newImageUrl,
-        });
+        updateUserProfile(profileUpdate);
     };
 
     const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
@@ -80,7 +94,7 @@ export default function EditArtistProfilePage() {
                                  <Upload className="mr-2 h-4 w-4" />
                                  Change Image
                              </Button>
-                             <p className="text-xs text-muted-foreground">Upload a new profile picture.</p>
+                             <p className="text-xs text-muted-foreground">Upload a new profile picture (max 2MB).</p>
                         </div>
                     </div>
                     
