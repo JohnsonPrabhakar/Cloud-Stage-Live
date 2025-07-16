@@ -60,26 +60,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
 
     if (!foundUser) {
+        toast({
+            title: 'Login Failed',
+            description: 'Invalid credentials. Please try again.',
+            variant: 'destructive',
+        });
         setIsLoading(false);
         return false;
     }
 
-    // Check if the user is trying to log in as an artist but is pending
     const application = artistApplications.find(app => app.email === email);
-    if(foundUser.role === 'artist' && application?.status === 'Pending') {
-         toast({
+    
+    if (foundUser.role === 'artist' && application?.status === 'Pending') {
+        toast({
             title: 'Application Pending',
-            description: 'Your artist application is still under review. Please wait for admin approval.',
+            description: 'Your artist application is still under review.',
             variant: 'destructive'
         });
         setIsLoading(false);
         return false;
     }
-    
+
     setUser(foundUser);
     setRole(foundUser.role);
     sessionStorage.setItem('user', JSON.stringify(foundUser));
     sessionStorage.setItem('role', foundUser.role);
+
+    toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${foundUser.name}!`
+    });
 
     if (foundUser.role === 'admin') router.push('/admin');
     else if (foundUser.role === 'artist') router.push('/artist/dashboard');
@@ -91,36 +101,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = (name: string, email: string, pass: string): boolean => {
     if (registeredUsers.some(u => u.email === email)) {
-      return false; // User already exists
+       toast({
+        title: 'Registration Failed',
+        description: 'An account with this email already exists.',
+        variant: 'destructive'
+      });
+      return false; 
     }
     const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass, role: 'user' };
     persistUsers([...registeredUsers, newUser]);
-    return login(email, pass);
+    
+    toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });
+    return true;
   };
 
 
   const artistRegister = (application: ArtistApplication) => {
-     if (registeredUsers.some(u => u.email === application.email)) {
-        // This is an existing user applying to be an artist
-        const updatedUsers = registeredUsers.map(u => u.email === application.email ? { ...u, role: 'artist' } : u);
-        persistUsers(updatedUsers);
-     } else {
-        // This is a new artist registration
-        const newUser: User = { 
-            id: `artist-${Date.now()}`,
-            name: application.name,
-            email: application.email,
-            password: application.password, // Assuming password is in the form
-            role: 'artist' 
-        };
-        persistUsers([...registeredUsers, newUser]);
+     if (artistApplications.some(u => u.email === application.email)) {
+       toast({
+          title: 'Application Already Submitted',
+          description: 'An application for this email is already pending review.',
+          variant: 'destructive'
+        });
+       return;
      }
+
+     const newUser: User = { 
+        id: `artist-${Date.now()}`,
+        name: application.name,
+        email: application.email,
+        password: application.password,
+        role: 'artist' 
+    };
+    persistUsers([...registeredUsers, newUser]);
      
      persistApplications([...artistApplications, application]);
      
      toast({
       title: 'Application Submitted!',
-      description: 'Your application is pending review. We will notify you via email upon approval.',
+      description: 'Your application is pending review. We will notify you upon approval.',
     });
     router.push('/admin-login');
   };
@@ -130,14 +149,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           app.id === applicationId ? { ...app, status } : app
       );
       persistApplications(updatedApplications);
-
-      const applicant = updatedApplications.find(app => app.id === applicationId);
-      if (applicant && status === 'Rejected') {
-           const updatedUsers = registeredUsers.map(u => 
-              u.email === applicant.email ? { ...u, role: 'user' } : u
-          );
-          persistUsers(updatedUsers);
-      }
   };
 
   const logout = () => {
