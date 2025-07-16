@@ -1,9 +1,10 @@
+
 'use client';
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Calendar, Languages, MessageSquare, Ticket, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Languages, MessageSquare, Ticket, User, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
 import Link from 'next/link';
@@ -71,6 +72,7 @@ export default function EventDetailPage() {
               height={720}
               className="w-full h-auto object-cover rounded-lg mb-8"
               data-ai-hint="event banner"
+              unoptimized
             />
           )}
 
@@ -111,7 +113,13 @@ export default function EventDetailPage() {
                 </div>
               </div>
                <div className="flex items-start gap-4">
-                <Badge className="mt-1">{event.category}</Badge>
+                <Tag className="h-5 w-5 mt-1 text-primary"/>
+                <div>
+                    <h3 className="font-semibold">Category</h3>
+                    <div className="text-sm text-muted-foreground">
+                        <Badge variant="secondary">{event.category}</Badge>
+                    </div>
+                </div>
               </div>
                <div className="flex items-start gap-4">
                 <Languages className="h-5 w-5 mt-1 text-primary"/>

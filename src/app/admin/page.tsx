@@ -31,6 +31,7 @@ const EventDetailsDialog = ({ event }: { event: Event }) => (
                     alt={event.title}
                     fill
                     className="object-cover"
+                    unoptimized
                 />
             </div>
 
@@ -58,7 +59,7 @@ const EventDetailsDialog = ({ event }: { event: Event }) => (
                     <Tag className="h-5 w-5 mt-1 text-primary"/>
                     <div>
                         <h4 className="font-semibold">Category</h4>
-                        <p className="text-sm text-muted-foreground"><Badge variant="secondary">{event.category}</Badge></p>
+                        <div className="text-sm text-muted-foreground"><Badge variant="secondary">{event.category}</Badge></div>
                     </div>
                 </div>
                  <div className="flex items-start gap-3">
