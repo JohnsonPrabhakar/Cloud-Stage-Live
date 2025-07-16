@@ -41,10 +41,18 @@ export default function AdminLayout({
   const menuItems = [
     { href: '/admin', label: 'Event Management', icon: Music, notificationCount: pendingEventCount },
     { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
+    { href: '/admin/artist-management', label: 'Artist Management', icon: UserSquare },
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/movies', label: 'Movies', icon: Film },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   ];
+
+  const isActive = (href: string) => {
+    if (href === '/admin') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -56,7 +64,7 @@ export default function AdminLayout({
               href={item.href}
               className={cn(
                   "flex items-center gap-2 transition-colors hover:text-foreground",
-                  (pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/admin') ? "text-foreground" : "text-muted-foreground"
+                  isActive(item.href) ? "text-foreground" : "text-muted-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
