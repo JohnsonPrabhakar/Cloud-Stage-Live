@@ -83,7 +83,7 @@ export default function AddMoviePage() {
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" name="description" placeholder="A brief synopsis of the movie" required />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Select name="category" required>
@@ -124,7 +124,7 @@ export default function AddMoviePage() {
                 <TabsTrigger value="url">Add via URL</TabsTrigger>
                 <TabsTrigger value="upload" disabled>Upload File</TabsTrigger>
               </TabsList>
-              <TabsContent value="url" className="pt-4 space-y-4">
+              <TabsContent className="pt-4 space-y-4" value="url">
                 <div className="space-y-2">
                   <Label htmlFor="videoUrl">Video URL</Label>
                   <Input 

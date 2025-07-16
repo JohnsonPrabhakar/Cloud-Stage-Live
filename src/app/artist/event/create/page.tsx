@@ -81,8 +81,8 @@ export default function CreateEventPage() {
 
     const combinedDate = setMinutes(setHours(date, parseInt(time.hour, 10)), parseInt(time.minute, 10));
     
-    const finalThumbnailUrl = getYoutubeThumbnail(youtubeUrl) || 'https://placehold.co/600x400.png';
     const submittedVideoUrl = (data.youtubeUrl as string) || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    const finalThumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
     const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
 
     const newEventData = {
@@ -173,7 +173,7 @@ export default function CreateEventPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select name="category" required>
@@ -204,7 +204,7 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
                 <Label>Date & Time</Label>
                 <div className="flex gap-2">
