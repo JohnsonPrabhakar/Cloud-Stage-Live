@@ -1,18 +1,16 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Languages, Clapperboard, ArrowLeft } from 'lucide-react';
-import type { Movie } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
+import { ArrowLeft, Clapperboard, Languages } from 'lucide-react';
+import type { Movie } from '@/lib/types';
 
 export default function MovieDetailPage({ params }: { params: { movieId: string } }) {
   const { movies } = useAuth();
-  const router = useRouter();
   const [movie, setMovie] = useState<Movie | null>(null);
 
   useEffect(() => {
