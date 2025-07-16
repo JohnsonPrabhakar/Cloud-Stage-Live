@@ -14,18 +14,34 @@ import type React from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { getYoutubeThumbnail } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function AddMoviePage() {
     const { toast } = useToast();
     const { createMovie } = useAuth();
+    const [videoUrl, setVideoUrl] = useState('');
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            const thumbnailUrl = getYoutubeThumbnail(videoUrl);
+            setThumbnailPreview(thumbnailUrl);
+        }, 500); // Debounce to avoid too many requests
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [videoUrl]);
+
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        const videoUrl = (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Default placeholder
-        const thumbnailUrl = getYoutubeThumbnail(videoUrl) || 'https://placehold.co/600x400.png';
+        const submittedVideoUrl = (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Default placeholder
+        const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
         const newMovie = {
             title: data.title as string,
@@ -33,7 +49,7 @@ export default function AddMoviePage() {
             category: data.category as string,
             language: data.language as string,
             thumbnailUrl: thumbnailUrl,
-            videoUrl: videoUrl,
+            videoUrl: submittedVideoUrl,
         };
         
         createMovie(newMovie);
@@ -43,6 +59,8 @@ export default function AddMoviePage() {
             description: 'The new movie has been successfully added to the platform.'
         });
         e.currentTarget.reset();
+        setVideoUrl('');
+        setThumbnailPreview(null);
     }
 
   return (
@@ -111,14 +129,33 @@ export default function AddMoviePage() {
                 <TabsTrigger value="url">Add via URL</TabsTrigger>
                 <TabsTrigger value="upload">Upload File</TabsTrigger>
               </TabsList>
-              <TabsContent value="url" className="pt-4">
+              <TabsContent value="url" className="pt-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="videoUrl">Video URL</Label>
-                  <Input id="videoUrl" name="videoUrl" placeholder="e.g., https://youtube.com/watch?v=..." />
+                  <Input 
+                    id="videoUrl" 
+                    name="videoUrl" 
+                    placeholder="e.g., https://youtube.com/watch?v=..." 
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                  />
                   <p className="text-xs text-muted-foreground">
                     The thumbnail will be automatically fetched from the video link.
                   </p>
                 </div>
+                 {thumbnailPreview && (
+                    <div className="space-y-2">
+                        <Label>Thumbnail Preview</Label>
+                        <Image 
+                            src={thumbnailPreview} 
+                            alt="Thumbnail preview"
+                            width={200}
+                            height={112}
+                            className="rounded-md border object-cover"
+                            unoptimized
+                        />
+                    </div>
+                )}
               </TabsContent>
               <TabsContent value="upload" className="pt-4">
                  <div className="space-y-6">
