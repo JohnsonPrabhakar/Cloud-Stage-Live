@@ -23,36 +23,43 @@ export default function ArtistManagementPage() {
                 <CardDescription>A list of all approved artists on the platform.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Artist</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Phone Number</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {artists.map((artist: User) => (
-                            <TableRow key={artist.id}>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <Avatar>
-                                            <AvatarImage src={getArtistImageUrl(artist)} />
-                                            <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="font-medium">{artist.name}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>{artist.email}</TableCell>
-                                <TableCell>{artist.phoneNumber || 'N/A'}</TableCell>
-                                <TableCell>
-                                    <Badge variant="secondary">{artist.applicationStatus}</Badge>
-                                </TableCell>
+                {artists.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Artist</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Phone Number</TableHead>
+                                <TableHead>Status</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {artists.map((artist: User) => (
+                                <TableRow key={artist.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar>
+                                                <AvatarImage src={getArtistImageUrl(artist)} />
+                                                <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium">{artist.name}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{artist.email}</TableCell>
+                                    <TableCell>{artist.phoneNumber || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary">{artist.applicationStatus}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="text-center py-16 text-muted-foreground">
+                        <p>There are no approved artists yet.</p>
+                        <p className="text-sm">Approve artists from the 'Artist Registrations' page.</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
