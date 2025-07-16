@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
@@ -45,6 +47,14 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto max-w-2xl py-12">
+        <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+        </div>
         <h1 className="text-4xl font-headline font-bold mb-8 text-center">My Profile</h1>
         <Card>
             <CardHeader>

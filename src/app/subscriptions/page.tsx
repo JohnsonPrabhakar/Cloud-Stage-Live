@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2 } from "lucide-react"
+import { ArrowLeft, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const features = [
   "Access any 20 paid events per month",
@@ -31,6 +32,14 @@ export default function SubscriptionsPage() {
     }
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md mb-8">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+        </div>
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
             Unlock Premium Access

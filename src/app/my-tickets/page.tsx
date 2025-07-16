@@ -4,8 +4,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { EventCard } from '@/components/EventCard';
-import { Ticket } from 'lucide-react';
+import { ArrowLeft, Ticket } from 'lucide-react';
 import type { Event } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function MyTicketsPage() {
   const { user, isLoading } = useAuth();
@@ -27,6 +29,14 @@ export default function MyTicketsPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+      </div>
       <div className="flex items-center gap-4 mb-8">
         <Ticket className="h-10 w-10 text-primary" />
         <div>

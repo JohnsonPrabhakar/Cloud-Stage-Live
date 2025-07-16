@@ -4,12 +4,13 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Languages, Ticket, User, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Languages, Ticket, User, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
+import Link from 'next/link';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -25,8 +26,14 @@ export default function EventDetailPage() {
 
   if (!event) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
         <h1 className="text-2xl font-headline">Event not found.</h1>
+         <Button asChild variant="outline">
+            <Link href="/events">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Events
+            </Link>
+        </Button>
       </div>
     );
   }
@@ -48,6 +55,14 @@ export default function EventDetailPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/events">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to All Events
+                </Link>
+            </Button>
+        </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           {hasTicket ? (

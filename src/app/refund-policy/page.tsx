@@ -1,6 +1,18 @@
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
 export default function RefundPolicyPage() {
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">
+      <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+      </div>
       <div className="prose lg:prose-xl dark:prose-invert mx-auto">
         <h1 className="font-headline">Refund Policy</h1>
         <p className="lead">

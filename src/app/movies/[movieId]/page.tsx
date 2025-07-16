@@ -2,8 +2,10 @@
 
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Languages, Clapperboard } from 'lucide-react';
+import { Languages, Clapperboard, ArrowLeft } from 'lucide-react';
 import type { Movie } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function MovieDetailPage() {
   const params = useParams();
@@ -13,14 +15,28 @@ export default function MovieDetailPage() {
 
   if (!movie) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
         <h1 className="text-2xl font-headline">Movie not found.</h1>
+        <Button asChild variant="outline">
+            <Link href="/movies">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Movies
+            </Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/movies">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to All Movies
+                </Link>
+            </Button>
+      </div>
       <div className="aspect-video w-full mb-8 rounded-lg overflow-hidden bg-black">
         <iframe
           className="w-full h-full"

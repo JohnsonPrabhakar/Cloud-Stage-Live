@@ -1,9 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Mail, Phone } from "lucide-react";
+import Link from "next/link";
 
 export default function ContactUsPage() {
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">
+      <div className="mb-8">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Home
+                </Link>
+            </Button>
+      </div>
       <h1 className="text-4xl font-headline font-bold text-center mb-8">Contact Us</h1>
       <p className="text-center text-lg text-muted-foreground mb-12">
         We'd love to hear from you. Reach out with any questions or feedback.
