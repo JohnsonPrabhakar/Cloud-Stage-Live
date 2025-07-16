@@ -1,16 +1,18 @@
+
+'use client';
+
 import { EventCard } from '@/components/EventCard';
 import { FilterControls } from '@/components/FilterControls';
 import { mockEvents } from '@/lib/mock-data';
 import type { Event } from '@/lib/types';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function EventsPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
-  const searchTerm = typeof searchParams?.search === 'string' ? searchParams.search : '';
-  const category = typeof searchParams?.category === 'string' ? searchParams.category : 'all';
-  const language = typeof searchParams?.language === 'string' ? searchParams.language : 'all';
+function EventsGrid() {
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get('search') || '';
+  const category = searchParams.get('category') || 'all';
+  const language = searchParams.get('language') || 'all';
 
   // In a real app, this would be fetched from an API
   const allEvents: Event[] = mockEvents.map(e => ({...e, date: new Date(e.date)}));
@@ -29,16 +31,7 @@ export default function EventsPage({
   const languages = ['all', ...Array.from(new Set(allEvents.map(e => e.language)))];
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-          Discover Events
-        </h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          Find your next live experience.
-        </p>
-      </div>
-
+    <>
       <FilterControls
         searchPlaceholder="Search by title or artist..."
         categories={categories}
@@ -62,6 +55,25 @@ export default function EventsPage({
           </p>
         </div>
       )}
+    </>
+  );
+}
+
+// Wrapper component to use Suspense
+export default function EventsPage() {
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
+          Discover Events
+        </h1>
+        <p className="text-lg text-muted-foreground mt-2">
+          Find your next live experience.
+        </p>
+      </div>
+      <Suspense fallback={<div>Loading filters...</div>}>
+        <EventsGrid />
+      </Suspense>
     </div>
   );
 }
