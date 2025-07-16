@@ -10,13 +10,11 @@ import type { Event } from '@/lib/types';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
-export default function EventDetailPage() {
+export default function EventDetailPage({ params }: { params: { eventId: string } }) {
   const { events, myTickets } = useAuth();
-  const params = useParams();
-  const eventId = params.eventId as string;
+  const eventId = params.eventId;
   const [event, setEvent] = useState<Event | null>(null);
   const { toast } = useToast();
   

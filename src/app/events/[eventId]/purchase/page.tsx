@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,11 +10,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, CreditCard, PartyPopper } from 'lucide-react';
 import type { Event } from '@/lib/types';
 
-export default function PurchasePage() {
+export default function PurchasePage({ params }: { params: { eventId: string } }) {
   const { user, isLoading, events, purchaseTicket } = useAuth();
   const router = useRouter();
-  const params = useParams();
-  const eventId = params.eventId as string;
+  const eventId = params.eventId;
   const [event, setEvent] = useState<Event | null>(null);
   const [isPurchased, setIsPurchased] = useState(false);
 
@@ -104,5 +103,3 @@ export default function PurchasePage() {
     </div>
   );
 }
-
-    

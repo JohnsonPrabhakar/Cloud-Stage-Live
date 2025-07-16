@@ -8,13 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, Clapperboard, Languages } from 'lucide-react';
 import type { Movie } from '@/lib/types';
-import { useParams } from 'next/navigation';
 
-export default function MovieDetailPage() {
+export default function MovieDetailPage({ params }: { params: { movieId: string } }) {
   const { movies } = useAuth();
   const [movie, setMovie] = useState<Movie | null>(null);
-  const params = useParams();
-  const movieId = params.movieId as string;
+  const movieId = params.movieId;
 
   useEffect(() => {
     if (movieId) {
