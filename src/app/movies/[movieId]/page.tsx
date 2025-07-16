@@ -15,7 +15,7 @@ export default function MovieDetailPage({ params }: { params: { movieId: string 
 
   if (!movie) {
     return (
-      <div className="flex h-screen items-center justify-center flex-col gap-4">
+      <div className="container mx-auto flex h-screen flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-headline">Movie not found.</h1>
         <Button asChild variant="outline">
             <Link href="/movies">
