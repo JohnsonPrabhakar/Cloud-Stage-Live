@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +13,7 @@ export default function AdminEventManagementPage() {
     const { toast } = useToast();
     
     // In a real app, this state would be managed via API calls
-    const [events, setEvents] = React.useState<Event[]>(mockEvents);
+    const [events, setEvents] = useState<Event[]>(mockEvents);
 
     const handleApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
         setEvents(prevEvents => prevEvents.map(e => e.id === eventId ? {...e, approvalStatus: status} : e));
