@@ -1,14 +1,13 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
-import { LayoutDashboard, Music, User, BarChart, PlusCircle, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, User, BarChart, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Logo } from '@/components/Logo';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function ArtistLayout({
   children,
@@ -40,40 +39,31 @@ export default function ArtistLayout({
     { href: '/artist/analytics', label: 'Analytics', icon: BarChart },
     { href: '/artist/verify', label: 'Verification', icon: CheckCircle },
   ];
+  
+  const isActive = (href: string) => pathname === href;
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <Logo />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {menuItems.map(item => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
-                    <SidebarMenuButton isActive={pathname === item.href}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
-            <div className='flex items-center gap-4'>
-              <SidebarTrigger className="md:hidden" />
-              <h1 className="text-xl font-semibold font-headline">Artist Dashboard</h1>
-            </div>
-            <Button asChild><Link href="/artist/event/create"><PlusCircle className="mr-2 h-4 w-4" /> Create Event</Link></Button>
-        </header>
-        <div className="p-4 md:p-8">
-            {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-screen w-full flex-col">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          {menuItems.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                  "flex items-center gap-2 transition-colors hover:text-foreground",
+                  isActive(item.href) ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        {children}
+      </main>
+    </div>
   );
 }
