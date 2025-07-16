@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Music, PlusCircle, UserCheck, BarChart } from 'lucide-react';
+import { Music, PlusCircle, UserCheck, BarChart, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/Logo';
@@ -40,6 +40,7 @@ export default function AdminLayout({
   const menuItems = [
     { href: '/admin', label: 'Event Management', icon: Music, notificationCount: pendingEventCount },
     { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
+    { href: '/admin/users', label: 'User Management', icon: Users },
     { href: '/admin/add-movie', label: 'Add Movie', icon: PlusCircle },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   ];
