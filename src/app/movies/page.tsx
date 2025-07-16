@@ -5,16 +5,16 @@ import { MovieCard } from '@/components/MovieCard';
 import { FilterControls } from '@/components/FilterControls';
 import type { Movie } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function MoviesPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
+function MoviesGrid() {
   const { movies: allMovies } = useAuth();
-  const searchTerm = typeof searchParams?.search === 'string' ? searchParams.search : '';
-  const category = typeof searchParams?.category === 'string' ? searchParams.category : 'all';
-  const language = typeof searchParams?.language === 'string' ? searchParams.language : 'all';
+  const searchParams = useSearchParams();
+
+  const searchTerm = searchParams.get('search') || '';
+  const category = searchParams.get('category') || 'all';
+  const language = searchParams.get('language') || 'all';
 
   const filteredMovies = allMovies.filter((movie: Movie) => {
     return (
@@ -28,16 +28,7 @@ export default function MoviesPage({
   const languages = allMovies.length > 0 ? ['all', ...Array.from(new Set(allMovies.map(m => m.language)))] : ['all'];
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-          Stream Movies
-        </h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          Your favorite films, available anytime.
-        </p>
-      </div>
-
+    <>
       <FilterControls
         searchPlaceholder="Search by title..."
         categories={categories}
@@ -61,6 +52,25 @@ export default function MoviesPage({
           </p>
         </div>
       )}
-    </div>
+    </>
   );
+}
+
+
+export default function MoviesPageWrapper() {
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
+          Stream Movies
+        </h1>
+        <p className="text-lg text-muted-foreground mt-2">
+          Your favorite films, available anytime.
+        </p>
+      </div>
+      <Suspense fallback={<div>Loading filters...</div>}>
+        <MoviesGrid />
+      </Suspense>
+    </div>
+  )
 }
