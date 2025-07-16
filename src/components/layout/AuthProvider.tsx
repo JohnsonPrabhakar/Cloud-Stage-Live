@@ -235,8 +235,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
 
-    const updatedUsers = registeredUsers.map(u => u.id === user.id ? updatedUser : u);
-    persistUsers(updatedUsers);
+    const updatedRegisteredUsers = registeredUsers.map(u => u.id === user.id ? updatedUser : u);
+    persistUsers(updatedRegisteredUsers);
   }
 
   const subscribeUser = () => {
