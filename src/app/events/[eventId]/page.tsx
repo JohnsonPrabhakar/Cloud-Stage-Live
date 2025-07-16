@@ -43,7 +43,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-8">
             <Button asChild variant="outline">
                 <Link href="/events">
@@ -65,19 +65,20 @@ export default function EventDetailPage() {
               ></iframe>
             </div>
           ) : (
-            <Image
-              src={event.thumbnailUrl}
-              alt={event.title}
-              width={1280}
-              height={720}
-              className="w-full h-auto object-cover rounded-lg mb-8"
-              data-ai-hint="event banner"
-              unoptimized
-            />
+            <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden">
+                <Image
+                  src={event.thumbnailUrl}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  data-ai-hint="event banner"
+                  unoptimized
+                />
+            </div>
           )}
 
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-4">{event.title}</h1>
-          <p className="text-lg text-foreground mb-8">{event.description}</p>
+          <h1 className="text-3xl md:text-5xl font-headline font-bold text-primary mb-4">{event.title}</h1>
+          <p className="text-base md:text-lg text-foreground mb-8">{event.description}</p>
           
            <Card className="mt-8">
             <CardHeader>
@@ -129,7 +130,7 @@ export default function EventDetailPage() {
                 </div>
               </div>
             </CardContent>
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               {hasTicket ? (
                 <Button disabled className="w-full"><Ticket className="mr-2 h-4 w-4"/> You have a ticket</Button>
               ) : (

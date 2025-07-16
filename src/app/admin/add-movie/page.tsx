@@ -68,7 +68,7 @@ export default function AddMoviePage() {
                 </Link>
             </Button>
         </div>
-      <Card className="max-w-2xl">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="font-headline">Add New Movie</CardTitle>
           <CardDescription>Fill in the form to add a new movie to the catalog.</CardDescription>

@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 
 export default function Footer() {
@@ -5,10 +6,10 @@ export default function Footer() {
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between py-6">
-          <p className="text-sm text-muted-foreground text-center md:text-left">
+          <p className="text-sm text-muted-foreground text-center md:text-left mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} CloudStage Live. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 mt-4 md:mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <Link href="/contact-us" className="text-sm text-muted-foreground hover:text-foreground">
               Contact Us
             </Link>

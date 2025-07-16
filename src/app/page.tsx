@@ -108,7 +108,6 @@ function SectionCarousel<T extends { id: string }>({ title, items, CardComponent
       <Carousel 
         opts={{
           align: "start",
-          loop: items.length > 3,
         }}
         plugins={[plugin.current]}
         onMouseEnter={plugin.current.stop}
@@ -117,15 +116,15 @@ function SectionCarousel<T extends { id: string }>({ title, items, CardComponent
       >
         <CarouselContent className="-ml-4">
           {items.map((item, index) => (
-            <CarouselItem key={item.id + index} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={item.id + index} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
               <div className="p-1 h-full">
                 <CardComponent item={item} />
               </div>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious className="hidden sm:inline-flex" />
+        <CarouselNext className="hidden sm:inline-flex" />
       </Carousel>
     </section>
   );

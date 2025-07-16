@@ -72,6 +72,12 @@ const EventDetailsDialog = ({ event }: { event: Event }) => (
                 </div>
             </div>
         </div>
+        <DialogClose asChild>
+            <Button variant="outline" className="absolute top-4 right-4 h-8 w-8 p-0 sm:hidden">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+            </Button>
+        </DialogClose>
     </DialogContent>
 );
 
@@ -88,54 +94,56 @@ export default function AdminEventManagementPage() {
     const rejectedEvents = events.filter(e => e.approvalStatus === 'Rejected');
 
     const EventTable = ({ events, showActions }: { events: Event[], showActions: boolean }) => (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Artist</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {events.map(event => (
-                    <TableRow key={event.id}>
-                        <TableCell className="font-medium">{event.title}</TableCell>
-                        <TableCell>{event.artist}</TableCell>
-                        <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-                        <TableCell>Rs. {event.price}</TableCell>
-                        <TableCell className="text-right space-x-1">
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
-                                </DialogTrigger>
-                                <EventDetailsDialog event={event} />
-                            </Dialog>
-                            {showActions && (
-                                <>
-                                    <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => handleApproval(event.id, 'Approved')}>
-                                        <Check className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => handleApproval(event.id, 'Rejected')}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </>
-                            )}
-                        </TableCell>
+        <div className="overflow-x-auto">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="hidden md:table-cell">Artist</TableHead>
+                        <TableHead className="hidden lg:table-cell">Date</TableHead>
+                        <TableHead className="hidden md:table-cell">Price</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {events.map(event => (
+                        <TableRow key={event.id}>
+                            <TableCell className="font-medium max-w-xs truncate">{event.title}</TableCell>
+                            <TableCell className="hidden md:table-cell">{event.artist}</TableCell>
+                            <TableCell className="hidden lg:table-cell">{new Date(event.date).toLocaleDateString()}</TableCell>
+                            <TableCell className="hidden md:table-cell">Rs. {event.price}</TableCell>
+                            <TableCell className="text-right space-x-1">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground">
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <EventDetailsDialog event={event} />
+                                </Dialog>
+                                {showActions && (
+                                    <>
+                                        <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => handleApproval(event.id, 'Approved')}>
+                                            <Check className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => handleApproval(event.id, 'Rejected')}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </>
+                                )}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
     );
 
     return (
         <div>
             <h1 className="text-3xl font-bold font-headline mb-6">Event Management</h1>
             <Tabs defaultValue="pending">
-                <TabsList>
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="pending">Pending ({pendingEvents.length})</TabsTrigger>
                     <TabsTrigger value="approved">Approved ({approvedEvents.length})</TabsTrigger>
                     <TabsTrigger value="rejected">Rejected ({rejectedEvents.length})</TabsTrigger>
