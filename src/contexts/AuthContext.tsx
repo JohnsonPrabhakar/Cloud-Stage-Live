@@ -16,6 +16,7 @@ interface AuthContextType {
     status: 'Approved' | 'Rejected'
   ) => void;
   updateUserProfile: (updatedUser: Partial<User>) => void;
+  subscribeUser: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

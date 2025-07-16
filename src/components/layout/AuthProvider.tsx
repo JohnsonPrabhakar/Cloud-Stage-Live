@@ -24,7 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedArtistApplications = sessionStorage.getItem('artistApplications');
       
       if (storedUser && storedRole) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        if(parsedUser.subscription?.expiryDate) {
+            parsedUser.subscription.expiryDate = new Date(parsedUser.subscription.expiryDate);
+        }
+        setUser(parsedUser);
         setRole(storedRole);
       }
       if (storedRegisteredUsers) {
@@ -58,11 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
 
     if (!foundUser) {
-        toast({
-            title: 'Login Failed',
-            description: 'Invalid credentials. Please try again.',
-            variant: 'destructive',
-        });
         setIsLoading(false);
         return false;
     }
@@ -78,6 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsLoading(false);
           return false;
       }
+    }
+    
+    if(foundUser.subscription?.expiryDate) {
+        foundUser.subscription.expiryDate = new Date(foundUser.subscription.expiryDate);
     }
 
     setUser(foundUser);
@@ -168,6 +171,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     persistUsers(updatedUsers);
   }
 
+  const subscribeUser = () => {
+    if (!user) {
+        toast({ title: "Login Required", description: "You must be logged in to subscribe.", variant: "destructive"});
+        router.push('/user-login');
+        return;
+    }
+    
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
+    const updatedUser: User = {
+        ...user,
+        subscription: {
+            plan: 'Premium',
+            expiryDate: expiryDate,
+            eventCount: 20
+        }
+    };
+
+    updateUserProfile(updatedUser);
+    toast({
+        title: "Subscription Successful!",
+        description: "Welcome to CloudStage Live Premium."
+    });
+  }
+
   const logout = () => {
     setIsLoading(true);
     setUser(null);
@@ -190,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     artistApplications,
     updateApplicationStatus,
     updateUserProfile,
+    subscribeUser,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
