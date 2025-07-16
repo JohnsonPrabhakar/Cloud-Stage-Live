@@ -24,13 +24,20 @@ export default function AdminLoginPage() {
   
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(email === 'admin@cloudstage.live' && password === 'admin123') {
-        login(email, password);
-        toast({ title: 'Admin Login Successful', description: 'Welcome, Admin!' });
+    const isSuccess = login(email, password);
+
+    if (isSuccess) {
+        if(email === 'admin@cloudstage.live') {
+            toast({ title: 'Admin Login Successful', description: 'Welcome, Admin!' });
+        } else {
+            toast({ title: 'Artist Login Successful', description: 'Welcome back!' });
+        }
     } else {
-        // Mock artist login
-        login(email.includes('@') ? email : 'artist@example.com', password);
-        toast({ title: 'Artist Login Successful', description: 'Welcome back!' });
+        toast({
+            title: 'Login Failed',
+            description: 'Please check your credentials or await admin approval.',
+            variant: 'destructive'
+        });
     }
   };
 
