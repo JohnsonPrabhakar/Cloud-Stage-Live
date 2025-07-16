@@ -9,8 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ArtistManagementPage() {
-    const { registeredUsers } = useAuth();
+    const { registeredUsers, artistApplications } = useAuth();
     const artists = registeredUsers.filter(u => u.role === 'artist' && u.applicationStatus === 'approved');
+
+    const getArtistImageUrl = (artist: User) => {
+        if (artist.profilePictureUrl) return artist.profilePictureUrl;
+        const application = artistApplications.find(app => app.email === artist.email);
+        return application?.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${artist.email}`;
+    }
 
     return (
         <Card>
@@ -34,7 +40,7 @@ export default function ArtistManagementPage() {
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={artist.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${artist.email}`} />
+                                            <AvatarImage src={getArtistImageUrl(artist)} />
                                             <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <span className="font-medium">{artist.name}</span>
