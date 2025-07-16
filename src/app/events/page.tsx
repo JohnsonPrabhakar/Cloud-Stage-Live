@@ -1,4 +1,6 @@
 
+'use client';
+
 import { EventCard } from '@/components/EventCard';
 import { FilterControls } from '@/components/FilterControls';
 import type { Event } from '@/lib/types';
