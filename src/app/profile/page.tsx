@@ -2,22 +2,40 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [name, setName] = useState('');
+  const [interests, setInterests] = useState('');
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/user-login');
     }
+    if (user) {
+        setName(user.name);
+        setInterests(user.interests?.join(', ') || 'Music, Comedy, Technology');
+    }
   }, [user, isLoading, router]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, you'd call an API to update the user's profile
+    toast({
+        title: "Profile Updated",
+        description: "Your changes have been saved successfully."
+    });
+  }
 
   if (isLoading || !user) {
     return <p className="p-8 text-center">Loading your profile...</p>;
@@ -36,24 +54,24 @@ export default function ProfilePage() {
                       <AvatarFallback className="text-3xl">{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <CardTitle className="text-2xl font-headline text-center">{user.name}</CardTitle>
+                        <CardTitle className="text-2xl font-headline text-center">{name}</CardTitle>
                         <CardDescription className="text-center">{user.email}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <form className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
-                        <Input id="name" defaultValue={user.name} />
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" defaultValue={user.email} disabled />
+                        <Input id="email" value={user.email} disabled />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="interests">My Interests</Label>
-                        <Input id="interests" defaultValue="Music, Comedy, Technology" placeholder="e.g., Music, Comedy..." />
+                        <Input id="interests" value={interests} onChange={(e) => setInterests(e.target.value)} placeholder="e.g., Music, Comedy..." />
                          <p className="text-xs text-muted-foreground">Separate interests with commas.</p>
                     </div>
                     <Button type="submit" className="w-full">Save Changes</Button>
