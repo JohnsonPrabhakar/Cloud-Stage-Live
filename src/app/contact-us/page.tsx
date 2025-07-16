@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
 
 export default function ContactUsPage() {
@@ -16,9 +16,19 @@ export default function ContactUsPage() {
       </div>
       <h1 className="text-4xl font-headline font-bold text-center mb-8">Contact Us</h1>
       <p className="text-center text-lg text-muted-foreground mb-12">
-        We'd love to hear from you. Reach out with any questions or feedback.
+        If you have any questions or need assistance, please feel free to reach out to us.
+        <br />
+        Our support team is available from 9 AM to 6 PM IST, Monday to Friday.
       </p>
       <div className="grid md:grid-cols-2 gap-8">
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <User className="w-6 h-6 text-primary"/>
+                    <span>Johnson Prabhakar J</span>
+                </CardTitle>
+            </CardHeader>
+        </Card>
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -27,8 +37,7 @@ export default function ContactUsPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <p>For general inquiries, please email us at:</p>
-                <a href="mailto:support@cloudstage.live" className="text-primary font-semibold hover:underline">support@cloudstage.live</a>
+                <a href="mailto:support@cloudstage.in" className="text-primary font-semibold hover:underline">support@cloudstage.in</a>
             </CardContent>
         </Card>
          <Card>
@@ -39,8 +48,7 @@ export default function ContactUsPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <p>Our support team is available Mon-Fri, 9am-5pm.</p>
-                <a href="tel:+1234567890" className="text-primary font-semibold hover:underline">+1 (234) 567-890</a>
+                <a href="tel:+918217659321" className="text-primary font-semibold hover:underline">+91 8217659321</a>
             </CardContent>
         </Card>
       </div>
