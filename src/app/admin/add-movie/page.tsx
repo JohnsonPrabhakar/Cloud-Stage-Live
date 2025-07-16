@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import type React from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { getYoutubeThumbnail } from '@/lib/utils';
 
 export default function AddMoviePage() {
     const { toast } = useToast();
@@ -23,14 +24,16 @@ export default function AddMoviePage() {
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
+        const videoUrl = (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Default placeholder
+        const thumbnailUrl = getYoutubeThumbnail(videoUrl) || 'https://placehold.co/600x400.png';
+
         const newMovie = {
             title: data.title as string,
             description: data.description as string,
             category: data.category as string,
             language: data.language as string,
-            // In a real app, you'd handle file uploads and generate a real URL
-            thumbnailUrl: 'https://placehold.co/600x400.png',
-            videoUrl: (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder
+            thumbnailUrl: thumbnailUrl,
+            videoUrl: videoUrl,
         };
         
         createMovie(newMovie);
@@ -111,7 +114,7 @@ export default function AddMoviePage() {
               <TabsContent value="url" className="pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="videoUrl">Video URL</Label>
-                  <Input id="videoUrl" name="videoUrl" placeholder="e.g., https://youtube.com/embed/..." />
+                  <Input id="videoUrl" name="videoUrl" placeholder="e.g., https://youtube.com/watch?v=..." />
                   <p className="text-xs text-muted-foreground">
                     The thumbnail will be automatically fetched from the video link.
                   </p>
