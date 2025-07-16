@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -21,9 +22,9 @@ import {
 } from "@/components/ui/sheet"
 
 const navLinks = [
-  { href: '/events', label: 'Events' },
-  { href: '/movies', label: 'Movies' },
-  { href: '/subscriptions', label: 'Subscriptions' },
+  { href: '/events', label: 'Events', auth: false },
+  { href: '/movies', label: 'Movies', auth: false },
+  { href: '/subscriptions', label: 'Subscriptions', auth: true },
 ];
 
 export default function Header() {
@@ -32,6 +33,8 @@ export default function Header() {
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
+  
+  const visibleNavLinks = navLinks.filter(link => !link.auth || (link.auth && user));
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -53,7 +56,7 @@ export default function Header() {
                 <Logo />
               </div>
               <nav className="flex flex-col gap-4">
-                {navLinks.map((link) => (
+                {visibleNavLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -72,7 +75,7 @@ export default function Header() {
             <Logo />
           </div>
           <nav className="hidden md:flex md:items-center md:gap-6 text-sm">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
