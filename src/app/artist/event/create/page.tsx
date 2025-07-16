@@ -14,9 +14,12 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { generateEventDescription } from '@/ai/flows/generate-event-description';
+import { useAuth } from '@/hooks/use-auth';
+import type { Event } from '@/lib/types';
 
 export default function CreateEventPage() {
   const { toast } = useToast();
+  const { createEvent } = useAuth();
   const [date, setDate] = useState<Date>();
   const [description, setDescription] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -51,13 +54,38 @@ export default function CreateEventPage() {
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    if (!date) {
+        toast({ title: 'Date is required', variant: 'destructive' });
+        return;
+    }
+
+    const newEventData = {
+        title: data.title as string,
+        description: data.description as string,
+        category: data.category as Event['category'],
+        language: data.language as Event['language'],
+        date: date,
+        price: Number(data.price),
+        thumbnailUrl: 'https://placehold.co/600x400.png', // Placeholder
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
+    };
+
+    createEvent(newEventData);
+    
     toast({
       title: 'Event Submitted!',
       description: 'Your event has been submitted for approval.'
     });
-    // Reset form logic here
+    // Here you would typically reset the form
+    e.currentTarget.reset();
+    setDate(undefined);
+    setDescription('');
+    setYoutubeUrl('');
   }
 
   return (
@@ -70,7 +98,7 @@ export default function CreateEventPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Event Title</Label>
-            <Input id="title" placeholder="e.g., Live Acoustic Session" required />
+            <Input id="title" name="title" placeholder="e.g., Live Acoustic Session" required />
           </div>
           
           <div className="space-y-2">
@@ -83,6 +111,7 @@ export default function CreateEventPage() {
             <div className="relative">
               <Textarea 
                 id="description" 
+                name="description"
                 placeholder="Describe your event..." 
                 className="min-h-[150px] pr-12" 
                 value={description}
@@ -105,29 +134,29 @@ export default function CreateEventPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select required>
+              <Select name="category" required>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="music">Music</SelectItem>
-                  <SelectItem value="stand-up">Stand-up</SelectItem>
-                  <SelectItem value="talk-show">Talk Show</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
+                  <SelectItem value="Music">Music</SelectItem>
+                  <SelectItem value="Stand-up">Stand-up</SelectItem>
+                  <SelectItem value="Talk Show">Talk Show</SelectItem>
+                  <SelectItem value="Workshop">Workshop</SelectItem>
                 </SelectContent>
               </Select>
             </div>
              <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
-              <Select required>
+              <Select name="language" required>
                 <SelectTrigger id="language">
                   <SelectValue placeholder="Select a language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="spanish">Spanish</SelectItem>
-                  <SelectItem value="hindi">Hindi</SelectItem>
-                   <SelectItem value="french">French</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Spanish">Spanish</SelectItem>
+                  <SelectItem value="Hindi">Hindi</SelectItem>
+                   <SelectItem value="French">French</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -156,13 +185,13 @@ export default function CreateEventPage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="price">Ticket Price (₹)</Label>
-                <Input id="price" type="number" placeholder="Enter 0 for free event" required />
+                <Input id="price" name="price" type="number" placeholder="Enter 0 for free event" required />
             </div>
           </div>
           
            <div className="space-y-2">
             <Label htmlFor="thumbnail">Event Thumbnail</Label>
-            <Input id="thumbnail" type="file" required />
+            <Input id="thumbnail" name="thumbnail" type="file" required />
             <p className="text-xs text-muted-foreground">Upload an eye-catching image for your event.</p>
           </div>
 

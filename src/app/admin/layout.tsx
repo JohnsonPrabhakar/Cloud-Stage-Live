@@ -9,13 +9,14 @@ import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { role, isLoading } = useAuth();
+  const { role, isLoading, artistApplications, events } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -32,10 +33,13 @@ export default function AdminLayout({
       </div>
     );
   }
+
+  const pendingEventCount = events.filter(e => e.approvalStatus === 'Pending').length;
+  const pendingArtistCount = artistApplications.filter(app => app.status === 'Pending').length;
   
   const menuItems = [
-    { href: '/admin', label: 'Event Management', icon: Music },
-    { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck },
+    { href: '/admin', label: 'Event Management', icon: Music, notificationCount: pendingEventCount },
+    { href: '/admin/artist-registrations', label: 'Artist Registrations', icon: UserCheck, notificationCount: pendingArtistCount },
     { href: '/admin/add-movie', label: 'Add Movie', icon: PlusCircle },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   ];
@@ -54,7 +58,12 @@ export default function AdminLayout({
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              <span>{item.label}</span>
+              {item.notificationCount && item.notificationCount > 0 && (
+                <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                  {item.notificationCount}
+                </Badge>
+              )}
             </Link>
           ))}
         </nav>

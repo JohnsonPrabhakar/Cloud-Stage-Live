@@ -2,10 +2,11 @@
 'use client';
 
 import React, { useState, useEffect, ReactNode } from 'react';
-import type { User, Role, ArtistApplication } from '@/lib/types';
+import type { User, Role, ArtistApplication, Event } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { mockEvents } from '@/lib/mock-data';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [artistApplications, setArtistApplications] = useState<ArtistApplication[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedRole = sessionStorage.getItem('role') as Role;
       const storedRegisteredUsers = sessionStorage.getItem('registeredUsers');
       const storedArtistApplications = sessionStorage.getItem('artistApplications');
+      const storedEvents = sessionStorage.getItem('events');
       
       if (storedUser && storedRole) {
         const parsedUser = JSON.parse(storedUser);
@@ -36,11 +39,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
        if (storedArtistApplications) {
         setArtistApplications(JSON.parse(storedArtistApplications));
+      }
+      if (storedEvents) {
+          const parsedEvents = JSON.parse(storedEvents).map((e: Event) => ({...e, date: new Date(e.date)}));
+          setEvents(parsedEvents);
       } else {
+        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date) }));
+        setEvents(initialEvents);
+        sessionStorage.setItem('events', JSON.stringify(initialEvents));
+      }
+      
+      if (!storedRegisteredUsers) {
         const adminUser: User = { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin123', role: 'admin' };
         setRegisteredUsers([adminUser]);
         sessionStorage.setItem('registeredUsers', JSON.stringify([adminUser]));
       }
+
     } catch (error) {
         console.error("Failed to parse session storage item.")
     }
@@ -56,6 +70,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setArtistApplications(applications);
     sessionStorage.setItem('artistApplications', JSON.stringify(applications));
   }
+  
+  const persistEvents = (eventsToSave: Event[]) => {
+    setEvents(eventsToSave);
+    sessionStorage.setItem('events', JSON.stringify(eventsToSave));
+  }
 
   const login = (email: string, pass: string): boolean => {
     setIsLoading(true);
@@ -65,8 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return false;
     }
-
-    if (foundUser.role === 'artist') {
+    
+    // Allow admins and regular users to log in directly
+    if (foundUser.role === 'user' || foundUser.role === 'admin') {
+      // proceed with login
+    } else if (foundUser.role === 'artist') {
       const application = artistApplications.find(app => app.email === email);
       if (application?.status !== 'Approved') {
           toast({
@@ -77,6 +99,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsLoading(false);
           return false;
       }
+    } else {
+       setIsLoading(false);
+       return false;
     }
     
     if(foundUser.subscription?.expiryDate) {
@@ -118,24 +143,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const artistRegister = (application: ArtistApplication) => {
-     if (registeredUsers.some(u => u.email === application.email)) {
+     if (registeredUsers.some(u => u.email === application.email && u.role !== 'user')) {
        toast({
           title: 'Application Failed',
-          description: 'An account with this email already exists. Please log in as a user to apply.',
+          description: 'An account with this email already exists.',
           variant: 'destructive'
         });
        return;
      }
 
-     const newArtistUser: User = { 
-        id: `artist-${Date.now()}`,
-        name: application.name,
-        email: application.email,
-        password: application.password,
-        role: 'artist',
-        applicationStatus: 'pending'
-    };
-    persistUsers([...registeredUsers, newArtistUser]);
+     const existingUser = registeredUsers.find(u => u.email === application.email && u.role === 'user');
+
+     if (existingUser) {
+       const updatedUsers = registeredUsers.map(u => u.id === existingUser.id ? { ...u, applicationStatus: 'pending' as const } : u);
+       persistUsers(updatedUsers);
+     } else {
+        const newArtistUser: User = { 
+          id: `artist-${Date.now()}`,
+          name: application.name,
+          email: application.email,
+          password: application.password,
+          role: 'artist',
+          applicationStatus: 'pending'
+      };
+      persistUsers([...registeredUsers, newArtistUser]);
+     }
      
      persistApplications([...artistApplications, {...application, status: 'Pending'}]);
      
@@ -156,7 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       persistApplications(updatedApplications);
 
       const updatedUsers = registeredUsers.map(u => 
-        u.email === appToUpdate.email ? { ...u, applicationStatus: status.toLowerCase() as User['applicationStatus'] } : u
+        u.email === appToUpdate.email ? { ...u, role: status === 'Approved' ? 'artist' : 'user', applicationStatus: status.toLowerCase() as User['applicationStatus'] } : u
       );
       persistUsers(updatedUsers);
   };
@@ -197,6 +229,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }
 
+  const createEvent = (eventData: Omit<Event, 'id' | 'artist' | 'artistId' | 'status' | 'approvalStatus'>) => {
+    if (!user || user.role !== 'artist') {
+      toast({ title: "Unauthorized", description: "You must be an artist to create an event.", variant: "destructive" });
+      return;
+    }
+
+    const newEvent: Event = {
+      ...eventData,
+      id: `evt-${Date.now()}`,
+      artist: user.name,
+      artistId: user.id,
+      approvalStatus: 'Pending',
+      status: new Date(eventData.date) > new Date() ? 'Upcoming' : 'Past', // Basic status logic
+    };
+
+    persistEvents([...events, newEvent]);
+  };
+
+  const updateEventApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
+    const updatedEvents = events.map(e => 
+      e.id === eventId ? { ...e, approvalStatus: status } : e
+    );
+    persistEvents(updatedEvents);
+  };
+
   const logout = () => {
     setIsLoading(true);
     setUser(null);
@@ -220,6 +277,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateApplicationStatus,
     updateUserProfile,
     subscribeUser,
+    events,
+    createEvent,
+    updateEventApproval,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
