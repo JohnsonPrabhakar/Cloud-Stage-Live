@@ -8,42 +8,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export default function UserManagementPage() {
+export default function ArtistManagementPage() {
     const { registeredUsers } = useAuth();
-    const users = registeredUsers.filter(u => u.role === 'user');
+    const artists = registeredUsers.filter(u => u.role === 'artist' && u.applicationStatus === 'approved');
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">User Management</CardTitle>
-                <CardDescription>A list of all non-artist users registered on the platform.</CardDescription>
+                <CardTitle className="font-headline">Artist Management</CardTitle>
+                <CardDescription>A list of all approved artists on the platform.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>User</TableHead>
+                            <TableHead>Artist</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Phone Number</TableHead>
-                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map((user: User) => (
-                            <TableRow key={user.id}>
+                        {artists.map((artist: User) => (
+                            <TableRow key={artist.id}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={user.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} />
-                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={artist.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${artist.email}`} />
+                                            <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <span className="font-medium">{user.name}</span>
+                                        <span className="font-medium">{artist.name}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.phoneNumber || 'N/A'}</TableCell>
+                                <TableCell>{artist.email}</TableCell>
+                                <TableCell>{artist.phoneNumber || 'N/A'}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>{user.role}</Badge>
+                                    <Badge variant="secondary">{artist.applicationStatus}</Badge>
                                 </TableCell>
                             </TableRow>
                         ))}
