@@ -13,11 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import type { ArtistApplication } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
+import { useState } from 'react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
     <DialogContent className="sm:max-w-[625px]">
@@ -52,21 +57,70 @@ const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
                 <span className="text-right font-semibold text-muted-foreground col-span-1 pt-1">Bio</span>
                 <p className="col-span-3 text-sm">{app.description}</p>
             </div>
+            {app.status === 'Rejected' && app.rejectionReason && (
+                 <div className="grid grid-cols-4 items-start gap-4">
+                    <span className="text-right font-semibold text-muted-foreground col-span-1 pt-1">Rejection Reason</span>
+                    <p className="col-span-3 text-sm text-destructive">{app.rejectionReason}</p>
+                </div>
+            )}
         </div>
     </DialogContent>
 );
 
+
+const RejectionDialog = ({ app, onConfirm }: { app: ArtistApplication, onConfirm: (id: string, reason: string) => void }) => {
+    const [reason, setReason] = useState('');
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Reject Application: {app.name}</DialogTitle>
+                <DialogDescription>
+                    Please provide a reason for rejecting this application. This will be visible to the applicant.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid w-full gap-1.5">
+                    <Label htmlFor="reason">Rejection Reason</Label>
+                    <Textarea placeholder="Type your message here." id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="secondary">
+                        Cancel
+                    </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                    <Button type="button" variant="destructive" onClick={() => onConfirm(app.id, reason)} disabled={!reason.trim()}>
+                        Confirm Rejection
+                    </Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
+
 export default function ArtistRegistrationsPage() {
   const { toast } = useToast();
   const { artistApplications, updateApplicationStatus } = useAuth();
+  const [selectedApp, setSelectedApp] = useState<ArtistApplication | null>(null);
 
-  const handleStatusChange = (id: string, status: 'Approved' | 'Rejected') => {
-    updateApplicationStatus(id, status);
+  const handleApprove = (id: string) => {
+    updateApplicationStatus(id, 'Approved');
     toast({
-      title: `Application ${status}`,
+      title: 'Application Approved',
       description: `The artist's status has been updated.`
     });
   };
+
+  const handleRejectConfirm = (id: string, reason: string) => {
+    updateApplicationStatus(id, 'Rejected', reason);
+    toast({
+      title: 'Application Rejected',
+      description: `The artist's status has been updated.`
+    });
+    setSelectedApp(null);
+  }
 
   const pendingApps = artistApplications.filter(app => app.status === 'Pending');
 
@@ -106,12 +160,17 @@ export default function ArtistRegistrationsPage() {
                         </DialogTrigger>
                         <ApplicationDetails app={app} />
                      </Dialog>
-                    <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => handleStatusChange(app.id, 'Approved')}>
+                    <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" onClick={() => handleApprove(app.id)}>
                         <Check className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => handleStatusChange(app.id, 'Rejected')}>
-                        <X className="h-4 w-4" />
-                    </Button>
+                    <Dialog onOpenChange={(open) => !open && setSelectedApp(null)}>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => setSelectedApp(app)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        {selectedApp && selectedApp.id === app.id && <RejectionDialog app={selectedApp} onConfirm={handleRejectConfirm} />}
+                     </Dialog>
                 </TableCell>
               </TableRow>
             ))}
