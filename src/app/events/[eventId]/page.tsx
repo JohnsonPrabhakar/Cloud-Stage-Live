@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Event } from '@/lib/types';
 import Link from 'next/link';
 import { mockEvents } from '@/lib/mock-data';
+import { useAuth } from '@/hooks/use-auth';
 
 // In a real app, this would be an async function fetching from an API
 function getEventById(id: string): Event | undefined {
@@ -14,6 +17,7 @@ function getEventById(id: string): Event | undefined {
 
 export default function EventDetailPage({ params }: { params: { eventId: string } }) {
   const event = getEventById(params.eventId);
+  const { user } = useAuth();
   
   // This will need to be replaced with a real check based on the logged-in user
   const hasTicket = false;
