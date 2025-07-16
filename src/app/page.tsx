@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/carousel';
 import { EventCard } from '@/components/EventCard';
 import { MovieCard } from '@/components/MovieCard';
-import { mockEvents, mockMovies } from '@/lib/mock-data';
 import type { Event, Movie } from '@/lib/types';
 import Autoplay from "embla-carousel-autoplay"
 import React from 'react';
@@ -37,15 +36,6 @@ export default function Home() {
           <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto mb-8">
             Your stage, anywhere. Discover and stream exclusive live events from artists around the world.
           </p>
-          <div className="max-w-xl mx-auto flex items-center relative">
-            <Input
-              placeholder="Search for events or movies..."
-              className="pr-12 h-12 text-lg"
-            />
-            <Button size="icon" className="absolute right-2" variant="ghost">
-              <Search className="h-6 w-6" />
-            </Button>
-          </div>
         </div>
       </section>
 
