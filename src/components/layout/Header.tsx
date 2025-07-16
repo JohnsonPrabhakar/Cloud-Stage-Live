@@ -20,11 +20,12 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import type { Role } from '@/lib/types';
 
 const navLinks = [
   { href: '/events', label: 'Events', auth: false },
   { href: '/movies', label: 'Movies', auth: false },
-  { href: '/subscriptions', label: 'Subscriptions', auth: true },
+  { href: '/subscriptions', label: 'Subscriptions', auth: true, roles: ['user'] as Role[] },
 ];
 
 export default function Header() {
@@ -35,7 +36,12 @@ export default function Header() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
   
-  const visibleNavLinks = navLinks.filter(link => !link.auth || (link.auth && user));
+  const visibleNavLinks = navLinks.filter(link => {
+    if (!link.auth) return true; // Public links are always visible
+    if (!user) return false; // Auth links require a user
+    if (link.roles && !link.roles.includes(role)) return false; // Role-specific links
+    return true;
+  });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
