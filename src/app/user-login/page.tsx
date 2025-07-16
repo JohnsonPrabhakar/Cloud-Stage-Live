@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -16,10 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import type { TabsProps } from '@radix-ui/react-tabs';
 
 export default function UserLoginPage() {
   const { login, register } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
@@ -42,14 +45,24 @@ export default function UserLoginPage() {
     const success = register(registerName, registerEmail, registerPassword, registerPhone);
     if (success) {
         toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live! Please log in.' });
+        setActiveTab('login');
+        // Clear registration form fields
+        setRegisterName('');
+        setRegisterEmail('');
+        setRegisterPassword('');
+        setRegisterPhone('');
     } else {
-        toast({ title: 'Registration Failed', description: 'An account with this email already exists.', variant: 'destructive' });
+        // Toast for failure is handled in register function
     }
   };
 
+  const onTabChange: TabsProps['onValueChange'] = (value) => {
+    setActiveTab(value);
+  }
+
   return (
     <div className="flex items-center justify-center py-12 px-4">
-      <Tabs defaultValue="login" className="w-full max-w-md">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full max-w-md">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="register">Register</TabsTrigger>
