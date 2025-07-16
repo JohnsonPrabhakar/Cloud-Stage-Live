@@ -30,41 +30,8 @@ type ArtistApplication = {
   description: string;
 };
 
-const mockApplications: ArtistApplication[] = [
-  { 
-    id: 'app1', 
-    name: 'John Doe', 
-    email: 'john.d@example.com', 
-    status: 'Pending',
-    location: "New York, USA",
-    category: "Music",
-    contactNumber: "+1 987 654 3210",
-    profileLink: "https://youtube.com/johndoe",
-    description: "A solo acoustic artist with a passion for soulful melodies and heartfelt lyrics. Performing for over 10 years."
-  },
-  { 
-    id: 'app2', 
-    name: 'The Cool Cats', 
-    email: 'cats@band.com', 
-    status: 'Pending',
-    location: "London, UK",
-    category: "Stand-up",
-    contactNumber: "+44 123 456 7890",
-    profileLink: "https://instagram.com/thecoolcatscomedy",
-    description: "A comedy troupe known for their witty sketches and improv. They have been featured on several TV shows."
-  },
-  { 
-    id: 'app3', 
-    name: 'Sarah Smile', 
-    email: 'sarah.s@music.com', 
-    status: 'Approved',
-    location: "Sydney, AU",
-    category: "Yoga",
-    contactNumber: "+61 987 654 321",
-    profileLink: "https://youtube.com/sarahsmilesyoga",
-    description: "A certified yoga instructor specializing in Vinyasa and restorative practices. Aims to bring peace and balance."
-  },
-];
+// In a real app, this would be fetched from an API
+const initialApplications: ArtistApplication[] = [];
 
 const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
     <DialogContent className="sm:max-w-[625px]">
@@ -105,9 +72,10 @@ const ApplicationDetails = ({ app }: { app: ArtistApplication }) => (
 
 export default function ArtistRegistrationsPage() {
   const { toast } = useToast();
-  const [applications, setApplications] = useState(mockApplications);
+  const [applications, setApplications] = useState(initialApplications);
 
   const handleStatusChange = (id: string, status: 'Approved' | 'Rejected') => {
+    // In a real app, you would make an API call to update the status.
     setApplications(apps => apps.map(app => app.id === id ? { ...app, status } : app));
     toast({
       title: `Application ${status}`,
@@ -170,4 +138,3 @@ export default function ArtistRegistrationsPage() {
     </div>
   );
 }
-

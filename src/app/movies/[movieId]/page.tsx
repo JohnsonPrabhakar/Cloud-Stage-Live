@@ -1,14 +1,15 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { mockMovies } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Languages, Clapperboard } from 'lucide-react';
+import type { Movie } from '@/lib/types';
 
 export default function MovieDetailPage() {
   const params = useParams();
   const movieId = params.movieId as string;
-  const movie = mockMovies.find((m) => m.id === movieId);
+  // In a real app, you would fetch this movie from an API
+  const movie: Movie | undefined = undefined;
 
   if (!movie) {
     return (

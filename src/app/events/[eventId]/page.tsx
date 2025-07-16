@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { mockEvents } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, Languages, Ticket, User, MessageSquare } from 'lucide-react';
@@ -10,17 +9,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import type { Event } from '@/lib/types';
 
 export default function EventDetailPage() {
   const params = useParams();
   const eventId = params.eventId as string;
-  const event = mockEvents.find((e) => e.id === eventId);
+  // In a real app, you would fetch this event from an API
+  const event: Event | undefined = undefined;
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
   
-  // Mock check if user has a ticket
-  const hasTicket = user && (event?.price === 0 || Math.random() > 0.5);
+  // This will need to be replaced with a real check
+  const hasTicket = false;
 
   if (!event) {
     return (

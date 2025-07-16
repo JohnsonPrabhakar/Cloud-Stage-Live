@@ -22,9 +22,10 @@ export default function Home() {
     Autoplay({ delay: 2000, stopOnInteraction: true })
   )
 
-  const liveEvents = mockEvents.filter(e => e.status === 'Live');
-  const upcomingEvents = mockEvents.filter(e => e.status === 'Upcoming');
-  const pastEvents = mockEvents.filter(e => e.status === 'Past');
+  const liveEvents: Event[] = [];
+  const upcomingEvents: Event[] = [];
+  const pastEvents: Event[] = [];
+  const movies: Movie[] = [];
 
   return (
     <div className="flex flex-col items-center">
@@ -51,7 +52,7 @@ export default function Home() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} />
         <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} />
-        <SectionCarousel title="Featured Movies" items={mockMovies} CardComponent={MovieCard} plugin={plugin} />
+        <SectionCarousel title="Featured Movies" items={movies} CardComponent={MovieCard} plugin={plugin} />
         <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} />
       </div>
     </div>
@@ -66,7 +67,14 @@ interface SectionCarouselProps<T> {
 }
 
 function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, plugin }: SectionCarouselProps<T>) {
-  if (items.length === 0) return null;
+  if (items.length === 0) return (
+    <section>
+        <h2 className="text-3xl font-headline font-bold mb-6">{title}</h2>
+        <div className="text-center py-8 text-muted-foreground">
+            <p>No {title.toLowerCase()} available at the moment.</p>
+        </div>
+    </section>
+  );
 
   return (
     <section>

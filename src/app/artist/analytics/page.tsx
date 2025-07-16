@@ -9,9 +9,10 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
-import { mockEvents } from '@/lib/mock-data';
+import type { Event } from '@/lib/types';
 
-const artistEvents = mockEvents.filter(e => e.artistId === 'artist1');
+// In a real app, this data would be fetched from an API
+const artistEvents: Event[] = [];
 
 const chartData = artistEvents.map(event => ({
   name: event.title.slice(0, 15) + '...',
@@ -31,6 +32,9 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function ArtistAnalyticsPage() {
+  const totalRevenue = chartData.reduce((acc, item) => acc + item.revenue, 0);
+  const totalTicketsSold = chartData.reduce((acc, item) => acc + item.ticketsSold, 0);
+
   return (
     <div>
       <h1 className="text-3xl font-bold font-headline mb-6">Your Analytics</h1>
@@ -41,7 +45,7 @@ export default function ArtistAnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹15,200</div>
+            <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">All time earnings</p>
           </CardContent>
         </Card>
@@ -51,7 +55,7 @@ export default function ArtistAnalyticsPage() {
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,840</div>
+            <div className="text-2xl font-bold">{totalTicketsSold.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Across all events</p>
           </CardContent>
         </Card>
@@ -61,7 +65,7 @@ export default function ArtistAnalyticsPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5,321</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">Your fan base</p>
           </CardContent>
         </Card>
@@ -72,6 +76,7 @@ export default function ArtistAnalyticsPage() {
             <CardTitle className="font-headline">Per-Event Performance</CardTitle>
         </CardHeader>
         <CardContent>
+          {chartData.length > 0 ? (
             <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
                 <RechartsBarChart data={chartData} layout="vertical">
                     <CartesianGrid horizontal={false} />
@@ -89,6 +94,11 @@ export default function ArtistAnalyticsPage() {
                     <Bar dataKey="ticketsSold" fill="var(--color-ticketsSold)" radius={5} />
                 </RechartsBarChart>
             </ChartContainer>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground">
+              <p>No event data available to display analytics.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -2,27 +2,28 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { mockEvents, mockTickets } from '@/lib/mock-data';
+import { useEffect, useState } from 'react';
 import { EventCard } from '@/components/EventCard';
 import { Ticket } from 'lucide-react';
+import type { Event } from '@/lib/types';
 
 export default function MyTicketsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [purchasedEvents, setPurchasedEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/user-login');
     }
+    // In a real app, you would fetch the user's tickets and corresponding event data here
+    // For now, we just set it to an empty array.
+    setPurchasedEvents([]);
   }, [user, isLoading, router]);
 
   if (isLoading || !user) {
     return <p className="p-8 text-center">Loading your tickets...</p>;
   }
-
-  const userTickets = mockTickets.filter(ticket => ticket.userId === 'user1'); // Mock for user1
-  const purchasedEvents = mockEvents.filter(event => userTickets.some(ticket => ticket.eventId === event.id));
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">

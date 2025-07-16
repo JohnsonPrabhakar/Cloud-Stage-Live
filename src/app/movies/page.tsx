@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MovieCard } from '@/components/MovieCard';
-import { mockMovies } from '@/lib/mock-data';
 import type { Movie } from '@/lib/types';
 
 export default function MoviesPage() {
@@ -18,7 +17,10 @@ export default function MoviesPage() {
   const [category, setCategory] = useState('all');
   const [language, setLanguage] = useState('all');
 
-  const filteredMovies = mockMovies.filter((movie: Movie) => {
+  // In a real app, this would be fetched from an API
+  const allMovies: Movie[] = [];
+
+  const filteredMovies = allMovies.filter((movie: Movie) => {
     return (
       movie.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (category === 'all' || movie.category === category) &&
@@ -26,8 +28,8 @@ export default function MoviesPage() {
     );
   });
   
-  const categories = ['all', ...Array.from(new Set(mockMovies.map(m => m.category)))];
-  const languages = ['all', ...Array.from(new Set(mockMovies.map(m => m.language)))];
+  const categories = ['all', ...Array.from(new Set(allMovies.map(m => m.category)))];
+  const languages = ['all', ...Array.from(new Set(allMovies.map(m => m.language)))];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -77,7 +79,7 @@ export default function MoviesPage() {
         <div className="text-center py-16">
           <h2 className="text-2xl font-headline">No Movies Found</h2>
           <p className="text-muted-foreground mt-2">
-            Try adjusting your search or filters.
+            There are no movies available at the moment. Please check back later.
           </p>
         </div>
       )}

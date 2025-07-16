@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EventCard } from '@/components/EventCard';
-import { mockEvents } from '@/lib/mock-data';
 import type { Event } from '@/lib/types';
 
 export default function EventsPage() {
@@ -18,7 +17,10 @@ export default function EventsPage() {
   const [category, setCategory] = useState('all');
   const [language, setLanguage] = useState('all');
 
-  const filteredEvents = mockEvents.filter((event: Event) => {
+  // In a real app, this would be fetched from an API
+  const allEvents: Event[] = [];
+
+  const filteredEvents = allEvents.filter((event: Event) => {
     return (
       (event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.artist.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -28,8 +30,8 @@ export default function EventsPage() {
     );
   });
 
-  const categories = ['all', ...Array.from(new Set(mockEvents.map(e => e.category)))];
-  const languages = ['all', ...Array.from(new Set(mockEvents.map(e => e.language)))];
+  const categories = ['all', ...Array.from(new Set(allEvents.map(e => e.category)))];
+  const languages = ['all', ...Array.from(new Set(allEvents.map(e => e.language)))];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -79,7 +81,7 @@ export default function EventsPage() {
         <div className="text-center py-16">
           <h2 className="text-2xl font-headline">No Events Found</h2>
           <p className="text-muted-foreground mt-2">
-            Try adjusting your search or filters.
+            There are no events available at the moment. Please check back later.
           </p>
         </div>
       )}

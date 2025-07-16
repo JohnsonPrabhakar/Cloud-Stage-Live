@@ -1,17 +1,17 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { mockEvents } from '@/lib/mock-data';
 import { EventCard } from '@/components/EventCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import type { Event } from '@/lib/types';
 
 export default function ArtistDashboardPage() {
   const { user } = useAuth();
 
   // In a real app, you'd fetch events for this artistId
-  const artistEvents = mockEvents.filter(event => event.artistId === 'artist1'); // Mocking with a fixed artistId
+  const artistEvents: Event[] = []; 
 
   const upcomingEvents = artistEvents.filter(e => e.status === 'Upcoming');
   const liveEvents = artistEvents.filter(e => e.status === 'Live');

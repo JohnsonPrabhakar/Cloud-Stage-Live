@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockEvents } from '@/lib/mock-data';
 import type { Event } from '@/lib/types';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,9 +12,10 @@ export default function AdminEventManagementPage() {
     const { toast } = useToast();
     
     // In a real app, this state would be managed via API calls
-    const [events, setEvents] = useState<Event[]>(mockEvents);
+    const [events, setEvents] = useState<Event[]>([]);
 
     const handleApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
+        // In a real app, you'd make an API call here.
         setEvents(prevEvents => prevEvents.map(e => e.id === eventId ? {...e, approvalStatus: status} : e));
         toast({
             title: `Event ${status}`,
