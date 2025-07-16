@@ -38,7 +38,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setRegisteredUsers(JSON.parse(storedRegisteredUsers));
       }
        if (storedArtistApplications) {
-        setArtistApplications(JSON.parse(storedArtistApplications));
+        const parsedArtistApplications = JSON.parse(storedArtistApplications);
+        setArtistApplications(parsedArtistApplications);
       }
       if (storedEvents) {
           const parsedEvents = JSON.parse(storedEvents).map((e: Event) => ({...e, date: new Date(e.date)}));
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (foundUser.role === 'artist') {
         const application = artistApplications.find(app => app.email === email);
-        if (!application || application.status !== 'Approved') {
+        if (application && application.status !== 'Approved') {
             toast({
                 title: 'Application Not Approved',
                 description: 'Your artist application is still pending or has been rejected.',
@@ -137,10 +138,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const artistRegister = (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
-     if (registeredUsers.some(u => u.email === applicationData.email && u.role !== 'user')) {
+     if (registeredUsers.some(u => u.email === applicationData.email && u.role === 'admin')) {
        toast({
           title: 'Application Failed',
-          description: 'An artist or admin account with this email already exists.',
+          description: 'An admin account with this email already exists.',
           variant: 'destructive'
         });
        return;
@@ -152,9 +153,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: 'Pending',
      }
 
-     const existingUser = registeredUsers.find(u => u.email === newApplication.email && u.role === 'user');
+     const existingUser = registeredUsers.find(u => u.email === newApplication.email);
 
      if (existingUser) {
+        if (existingUser.applicationStatus === 'pending' || existingUser.applicationStatus === 'approved') {
+            toast({
+                title: 'Application Failed',
+                description: 'An artist application for this email already exists or is approved.',
+                variant: 'destructive'
+            });
+            return;
+        }
        const updatedUsers = registeredUsers.map(u => u.id === existingUser.id ? { ...u, applicationStatus: 'pending' as const, role: 'artist' as const } : u);
        persistUsers(updatedUsers);
      } else {
@@ -184,9 +193,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const updatedApplications = artistApplications.map(app => {
         if (app.id !== applicationId) return app;
-        const updatedApp = { ...app, status };
+        const updatedApp: ArtistApplication = { ...app, status };
         if (status === 'Rejected' && reason) {
-            (updatedApp as ArtistApplication).rejectionReason = reason;
+            updatedApp.rejectionReason = reason;
         }
         return updatedApp;
       });
@@ -195,9 +204,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const updatedUsers = registeredUsers.map(u => {
         if (u.email !== appToUpdate.email) return u;
         
-        const newStatus = status === 'Approved' ? 'approved' : 'rejected';
-        
-        return { ...u, applicationStatus: newStatus };
+        if (status === 'Approved') {
+           return { ...u, applicationStatus: 'approved' as const };
+        } else {
+           // If rejected, reset their role and application status to allow re-application
+           return { ...u, role: 'user' as const, applicationStatus: 'none' as const };
+        }
       });
       persistUsers(updatedUsers);
   };
