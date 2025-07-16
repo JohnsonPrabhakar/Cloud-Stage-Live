@@ -10,7 +10,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
-import type { Event } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 
 const chartConfig = {
@@ -25,15 +24,24 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function ArtistAnalyticsPage() {
-  const { user, events } = useAuth();
+  const { user, events, allTickets } = useAuth();
   
   const artistEvents = events.filter(e => e.artistId === user?.id);
+  const artistEventIds = new Set(artistEvents.map(e => e.id));
+  
+  const artistTickets = allTickets.filter(t => artistEventIds.has(t.eventId));
 
-  const chartData = artistEvents.map(event => ({
-    name: event.title.slice(0, 15) + (event.title.length > 15 ? '...' : ''),
-    ticketsSold: Math.floor(Math.random() * 500) + 50, // Mock data
-    revenue: event.price * (Math.floor(Math.random() * 500) + 50), // Mock data
-  }));
+  const chartData = artistEvents.map(event => {
+    const ticketsForEvent = artistTickets.filter(t => t.eventId === event.id);
+    const ticketsSoldCount = ticketsForEvent.length;
+    const revenueForEvent = ticketsSoldCount * event.price;
+
+    return {
+      name: event.title.slice(0, 15) + (event.title.length > 15 ? '...' : ''),
+      ticketsSold: ticketsSoldCount,
+      revenue: revenueForEvent,
+    };
+  });
 
   const totalRevenue = chartData.reduce((acc, item) => acc + item.revenue, 0);
   const totalTicketsSold = chartData.reduce((acc, item) => acc + item.ticketsSold, 0);
@@ -91,10 +99,11 @@ export default function ArtistAnalyticsPage() {
                         tickMargin={10}
                         width={120}
                      />
-                    <XAxis dataKey="ticketsSold" type="number" hide />
+                    <XAxis type="number" hide />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <Legend />
-                    <Bar dataKey="ticketsSold" fill="var(--color-ticketsSold)" radius={5} />
+                    <Bar dataKey="ticketsSold" name="Tickets Sold" fill="var(--color-ticketsSold)" radius={5} />
+                    <Bar dataKey="revenue" name="Revenue (Rs.)" fill="var(--color-revenue)" radius={5} />
                 </RechartsBarChart>
             </ChartContainer>
           ) : (
