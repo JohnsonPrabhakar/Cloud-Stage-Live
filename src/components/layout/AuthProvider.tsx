@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, ReactNode } from 'react';
@@ -35,32 +36,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loggedInUser = { id: 'admin', name: 'Admin', email };
       loggedInRole = 'admin';
       router.push('/admin');
-    } else if (email.endsWith('@artist.com')) {
-      loggedInUser = { id: 'artist-mock', name: 'Verified Artist', email };
-      loggedInRole = 'artist';
-      router.push('/artist/dashboard');
-    } else {
-      loggedInUser = { id: 'user-mock', name: 'Sample User', email };
-      loggedInRole = 'user';
-      router.push('/');
+    } else if (email.includes('@')) { // Simplified check for any user login
+      // A real app would check credentials against a database of approved artists/users
+      const isArtist = email.endsWith('@artist.com') || email === 'john.d@example.com' || email === 'cats@band.com';
+      if (isArtist) {
+        loggedInUser = { id: 'artist-mock', name: 'Verified Artist', email };
+        loggedInRole = 'artist';
+        router.push('/artist/dashboard');
+      } else {
+         loggedInUser = { id: 'user-mock', name: 'Sample User', email };
+         loggedInRole = 'user';
+         router.push('/');
+      }
     }
 
-    setUser(loggedInUser);
-    setRole(loggedInRole);
-    sessionStorage.setItem('user', JSON.stringify(loggedInUser));
-    sessionStorage.setItem('role', loggedInRole);
+    if (loggedInUser && loggedInRole) {
+        setUser(loggedInUser);
+        setRole(loggedInRole);
+        sessionStorage.setItem('user', JSON.stringify(loggedInUser));
+        sessionStorage.setItem('role', loggedInRole);
+    }
     setIsLoading(false);
   };
 
   const artistRegister = (details: Omit<User, 'id'>) => {
-     // In a real app, this would hit a backend endpoint.
-     // For now, we'll just log them in as a pending artist.
-    const newArtist: User = { ...details, id: `artist-${Date.now()}` };
-    setUser(newArtist);
-    setRole('artist'); // Initially pending, but for UI we give artist role
-    sessionStorage.setItem('user', JSON.stringify(newArtist));
-    sessionStorage.setItem('role', 'artist');
-    router.push('/artist/dashboard?status=pending');
+     // In a real app, this would hit a backend endpoint to save the application.
+     // The current flow redirects to login, so no state change is needed here.
+     console.log("Artist application submitted:", details);
   };
 
   const logout = () => {

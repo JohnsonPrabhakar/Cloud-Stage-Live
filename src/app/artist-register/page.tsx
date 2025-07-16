@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,6 +19,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 const PolicyContent = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <DialogContent className="sm:max-w-[625px]">
@@ -38,9 +42,8 @@ const PolicyContent = ({ title, children }: { title: string, children: React.Rea
 export default function ArtistRegisterPage() {
   const { artistRegister } = useAuth();
   const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeRefund, setAgreeRefund] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
@@ -57,16 +60,23 @@ export default function ArtistRegisterPage() {
       });
       return;
     }
+    // In a real app, form data would be sent to the backend.
+    // We get the name and email for the toast message.
+    const form = e.target as HTMLFormElement;
+    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+
     artistRegister({ name, email });
     toast({
-      title: 'Registration Submitted',
-      description: 'Your application is pending approval. Welcome!',
+      title: 'Application Submitted!',
+      description: 'Your application is pending review. We will notify you via email upon approval.',
     });
+    router.push('/admin-login');
   };
 
   return (
     <div className="flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-2xl">
         <form onSubmit={handleSubmit}>
           <CardHeader>
             <CardTitle className="font-headline text-3xl">Become an Artist</CardTitle>
@@ -75,21 +85,65 @@ export default function ArtistRegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Artist/Band Name</Label>
-                <Input id="name" placeholder="Your performance name" required value={name} onChange={e => setName(e.target.value)} />
+                <Input id="name" name="name" placeholder="Your performance name" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="contact@yourband.com" required value={email} onChange={e => setEmail(e.target.value)} />
+                <Input id="email" name="email" type="email" placeholder="contact@yourband.com" required />
               </div>
-              <div className="space-y-2">
+               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+                <Input id="password" name="password" type="password" required />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="contactNumber">Contact Number</Label>
+                <Input id="contactNumber" name="contactNumber" type="tel" placeholder="+1 234 567 890" required />
               </div>
             </div>
-            <div className="space-y-4">
+            
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" name="location" placeholder="e.g., New York, USA" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                     <Select name="category" required>
+                        <SelectTrigger id="category">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="music">Music</SelectItem>
+                          <SelectItem value="stand-up">Stand-up</SelectItem>
+                          <SelectItem value="yoga">Yoga</SelectItem>
+                          <SelectItem value="talk-show">Talk Show</SelectItem>
+                          <SelectItem value="workshop">Workshop</SelectItem>
+                           <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="profileLink">YouTube / Instagram Link</Label>
+                <Input id="profileLink" name="profileLink" placeholder="A link to your work for our reference" required />
+            </div>
+
+             <div className="space-y-2">
+                <Label htmlFor="artistImage">Artist/Band Image</Label>
+                <Input id="artistImage" name="artistImage" type="file" required />
+                <p className="text-xs text-muted-foreground">Upload a high-quality photo.</p>
+            </div>
+            
+            <div className="space-y-2">
+                <Label htmlFor="description">About You / Your Band</Label>
+                <Textarea id="description" name="description" placeholder="Tell us about yourself..." className="min-h-[120px]" required />
+            </div>
+
+            <div className="space-y-4 pt-4">
               <div className="items-top flex space-x-2">
                 <Checkbox id="terms" checked={agreeTerms} onCheckedChange={(checked) => setAgreeTerms(Boolean(checked))} />
                 <div className="grid gap-1.5 leading-none">
