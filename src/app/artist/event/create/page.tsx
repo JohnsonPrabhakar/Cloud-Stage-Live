@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,11 +12,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Sparkles, Loader2 } from 'lucide-react';
 import { format, setHours, setMinutes } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getYoutubeThumbnail } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { generateEventDescription } from '@/ai/flows/generate-event-description';
 import { useAuth } from '@/hooks/use-auth';
 import type { Event } from '@/lib/types';
+import Image from 'next/image';
 
 export default function CreateEventPage() {
   const { toast } = useToast();
@@ -26,18 +27,18 @@ export default function CreateEventPage() {
   const [description, setDescription] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [thumbnailUrl, setThumbnailUrl] = useState('https://placehold.co/600x400.png');
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailUrl(reader.result as string);
+  useEffect(() => {
+      const handler = setTimeout(() => {
+          const thumbnailUrl = getYoutubeThumbnail(youtubeUrl);
+          setThumbnailPreview(thumbnailUrl);
+      }, 500);
+
+      return () => {
+          clearTimeout(handler);
       };
-      reader.readAsDataURL(file);
-    }
-  };
+  }, [youtubeUrl]);
 
   const handleGenerateDescription = async () => {
     if (!youtubeUrl) {
@@ -79,6 +80,8 @@ export default function CreateEventPage() {
     }
 
     const combinedDate = setMinutes(setHours(date, parseInt(time.hour, 10)), parseInt(time.minute, 10));
+    
+    const finalThumbnailUrl = getYoutubeThumbnail(youtubeUrl) || 'https://placehold.co/600x400.png';
 
     const newEventData = {
         title: data.title as string,
@@ -87,7 +90,7 @@ export default function CreateEventPage() {
         language: data.language as Event['language'],
         date: combinedDate,
         price: Number(data.price),
-        thumbnailUrl: thumbnailUrl,
+        thumbnailUrl: finalThumbnailUrl,
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
     };
 
@@ -98,7 +101,7 @@ export default function CreateEventPage() {
     setTime({ hour: '18', minute: '00' });
     setDescription('');
     setYoutubeUrl('');
-    setThumbnailUrl('https://placehold.co/600x400.png');
+    setThumbnailPreview(null);
   }
 
   return (
@@ -115,9 +118,32 @@ export default function CreateEventPage() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="youtubeUrl">YouTube URL (for AI Description)</Label>
-            <Input id="youtubeUrl" placeholder="https://youtube.com/watch?v=..." value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} />
+            <Label htmlFor="youtubeUrl">YouTube URL (for AI Description & Thumbnail)</Label>
+            <Input 
+              id="youtubeUrl" 
+              name="youtubeUrl"
+              placeholder="https://youtube.com/watch?v=..." 
+              value={youtubeUrl} 
+              onChange={e => setYoutubeUrl(e.target.value)} 
+            />
+            <p className="text-xs text-muted-foreground">
+              Provide a YouTube link to auto-generate the event description and fetch the thumbnail.
+            </p>
           </div>
+          
+          {thumbnailPreview && (
+            <div className="space-y-2">
+                <Label>Thumbnail Preview</Label>
+                <Image 
+                    src={thumbnailPreview} 
+                    alt="Thumbnail preview"
+                    width={200}
+                    height={112}
+                    className="rounded-md border object-cover"
+                    unoptimized
+                />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Event Description</Label>
@@ -222,12 +248,6 @@ export default function CreateEventPage() {
                 <Label htmlFor="price">Ticket Price (₹)</Label>
                 <Input id="price" name="price" type="number" placeholder="Enter 0 for free event" required />
             </div>
-          </div>
-          
-           <div className="space-y-2">
-            <Label htmlFor="thumbnail">Event Thumbnail</Label>
-            <Input id="thumbnail" name="thumbnail" type="file" required onChange={handleThumbnailChange} accept="image/*" />
-            <p className="text-xs text-muted-foreground">Upload an eye-catching image for your event.</p>
           </div>
 
           <div className="flex justify-end">
