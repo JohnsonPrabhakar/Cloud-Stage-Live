@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Input } from '@/components/ui/input';
@@ -18,11 +19,11 @@ import React from 'react';
 import Image from 'next/image';
 
 const heroImages = [
-  { src: 'https://placehold.co/1600x800', alt: 'Live music concert', hint: 'music concert' },
-  { src: 'https://placehold.co/1600x800', alt: 'Comedy show', hint: 'comedy show' },
-  { src: 'https://placehold.co/1600x800', alt: 'Yoga session', hint: 'yoga session' },
-  { src: 'https://placehold.co/1600x800', alt: 'Online workshop', hint: 'online workshop' },
-  { src: 'https://placehold.co/1600x800', alt: 'Talk show', hint: 'talk show' },
+  { src: 'https://images.unsplash.com/photo-1658227633934-b589ca17d602?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtdXNpYyUyMGNvbmNlcnR8ZW58MHx8fHwxNzUyNjYxMjI4fDA&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Live music concert', hint: 'music concert' },
+  { src: 'https://images.unsplash.com/photo-1648237409808-aa4649c07ec8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb21lZHklMjBzaG93fGVufDB8fHx8MTc1MjY0NzA0M3ww&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Comedy show', hint: 'comedy show' },
+  { src: 'https://images.unsplash.com/photo-1731597076108-f3bbe268162f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx5b2dhJTIwc2Vzc2lvbnxlbnwwfHx8fDE3NTI2NjEyMjh8MA&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Yoga session', hint: 'yoga session' },
+  { src: 'https://images.unsplash.com/photo-1733222765056-b0790217baa9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxvbmxpbmUlMjB3b3Jrc2hvcHxlbnwwfHx8fDE3NTI2NjEyMjh8MA&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Online workshop', hint: 'online workshop' },
+  { src: 'https://images.unsplash.com/photo-1647866631704-cc4d8388d867?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0YWxrJTIwc2hvd3xlbnwwfHx8fDE3NTI2NjEyMjh8MA&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Talk show', hint: 'talk show' },
 ]
 
 export default function Home() {
@@ -48,13 +49,14 @@ export default function Home() {
           <CarouselContent>
             {heroImages.map((image, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-[400px] md:h-[500px] lg:h-[600px] w-full">
+                <div className="relative h-[300px] md:h-[400px] lg:h-[500px] w-full">
                   <Image
                     src={image.src}
                     alt={image.alt}
                     fill
                     className="object-cover"
                     data-ai-hint={image.hint}
+                    priority={index === 0}
                   />
                   <div className="absolute inset-0 bg-black/50" />
                 </div>
