@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, Upload } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import type React from 'react';
 
 export default function ProfilePage() {
   const { user, isLoading, updateUserProfile } = useAuth();
@@ -20,7 +20,7 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [newImageSelected, setNewImageSelected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,13 +37,9 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-          const result = reader.result as string;
-          setImagePreview(result);
-          setImageData(result);
-      };
-      reader.readAsDataURL(file);
+      const tempUrl = URL.createObjectURL(file);
+      setImagePreview(tempUrl);
+      setNewImageSelected(true);
     }
   };
 
@@ -53,18 +49,20 @@ export default function ProfilePage() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     
-    const profileUpdate: Partial<typeof user> = {
+    const profileUpdate: Partial<Omit<typeof user, 'id' | 'email'>> = {
         name,
         interests: interests.split(',').map(i => i.trim()),
     };
     
-    if (imageData) {
-        profileUpdate.profilePictureUrl = imageData;
+    if (newImageSelected) {
+        // Simulate a new image upload by generating a new unique avatar URL
+        profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}-${Date.now()}`;
     }
 
     updateUserProfile(profileUpdate);
-    setImageData(null); // Reset after submission attempt
+    setNewImageSelected(false);
   }
 
   if (isLoading || !user) {

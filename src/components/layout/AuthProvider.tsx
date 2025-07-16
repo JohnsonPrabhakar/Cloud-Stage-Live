@@ -197,7 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ...applicationData,
         id: `app-${Date.now()}`,
         status: 'Pending',
-        artistImageUrl: applicationData.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
+        artistImageUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
      }
      
      const newArtistUser: User = { 
@@ -246,23 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Create the updated user object by merging current user data with new data.
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
-
-    try {
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        toast({
-          title: "Profile Image Not Saved",
-          description: "Your profile picture is too large to be saved in the browser. Please choose a smaller file. Other changes were saved.",
-          variant: "destructive",
-        });
-        // Revert image change but keep other data
-        const userWithoutImage = { ...updatedUser, profilePictureUrl: user.profilePictureUrl };
-        localStorage.setItem('user', JSON.stringify(userWithoutImage));
-        setUser(userWithoutImage);
-      }
-    }
-
+    localStorage.setItem('user', JSON.stringify(updatedUser));
 
     // Update the user in the main list of registered users as well.
     const updatedRegisteredUsers = registeredUsers.map(u => 

@@ -10,14 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import type React from "react";
 import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function EditArtistProfilePage() {
     const { user, updateUserProfile } = useAuth();
-    const { toast } = useToast();
+    
     const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [imageData, setImageData] = useState<string | null>(null);
+    const [newImageSelected, setNewImageSelected] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -30,21 +29,9 @@ export default function EditArtistProfilePage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({
-                    variant: 'destructive',
-                    title: 'Image too large',
-                    description: 'Please upload an image smaller than 5MB.',
-                });
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setImagePreview(result);
-                setImageData(result);
-            };
-            reader.readAsDataURL(file);
+            const tempUrl = URL.createObjectURL(file);
+            setImagePreview(tempUrl);
+            setNewImageSelected(true);
         }
     };
     
@@ -55,14 +42,15 @@ export default function EditArtistProfilePage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        const profileUpdate: Partial<typeof user> = { name };
+        const profileUpdate: { name: string, profilePictureUrl?: string } = { name };
         
-        if (imageData) {
-            profileUpdate.profilePictureUrl = imageData;
+        if (newImageSelected && user) {
+            // Simulate a new image upload by generating a new unique avatar URL
+            profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}-${Date.now()}`;
         }
 
         updateUserProfile(profileUpdate);
-        setImageData(null); // Reset after submission attempt
+        setNewImageSelected(false); 
     };
 
     const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
