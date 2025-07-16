@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function UserLoginPage() {
   const { login } = useAuth();
@@ -64,8 +65,14 @@ export default function UserLoginPage() {
                   <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full">Login</Button>
+                 <p className="text-center text-sm text-muted-foreground">
+                  Are you an artist or admin?{' '}
+                  <Link href="/admin-login" className="font-semibold text-primary hover:underline">
+                    Login here
+                  </Link>
+                </p>
               </CardFooter>
             </form>
           </Card>
