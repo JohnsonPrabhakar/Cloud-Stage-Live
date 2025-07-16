@@ -1,17 +1,27 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Languages, Clapperboard, ArrowLeft } from 'lucide-react';
 import type { Movie } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { mockMovies } from '@/lib/mock-data';
-
-// In a real app, this would be an async function fetching from an API
-function getMovieById(id: string): Movie | undefined {
-    return mockMovies.find(movie => movie.id === id);
-}
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function MovieDetailPage({ params }: { params: { movieId: string } }) {
-  const movie = getMovieById(params.movieId);
+  const { movies } = useAuth();
+  const router = useRouter();
+  const [movie, setMovie] = useState<Movie | null>(null);
+
+  useEffect(() => {
+    const foundMovie = movies.find(m => m.id === params.movieId);
+    if (foundMovie) {
+      setMovie(foundMovie);
+    }
+  }, [params.movieId, movies]);
+
 
   if (!movie) {
     return (

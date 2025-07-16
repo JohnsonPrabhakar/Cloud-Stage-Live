@@ -2,11 +2,11 @@
 'use client';
 
 import React, { useState, useEffect, ReactNode } from 'react';
-import type { User, Role, ArtistApplication, Event } from '@/lib/types';
+import type { User, Role, ArtistApplication, Event, Movie } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockEvents } from '@/lib/mock-data';
+import { mockEvents, mockMovies } from '@/lib/mock-data';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [artistApplications, setArtistApplications] = useState<ArtistApplication[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedRegisteredUsers = localStorage.getItem('registeredUsers');
       const storedArtistApplications = localStorage.getItem('artistApplications');
       const storedEvents = localStorage.getItem('events');
+      const storedMovies = localStorage.getItem('movies');
       
       if (storedUser && storedRole) {
         const parsedUser = JSON.parse(storedUser);
@@ -48,6 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date) }));
         setEvents(initialEvents);
         localStorage.setItem('events', JSON.stringify(initialEvents));
+      }
+       if (storedMovies) {
+          setMovies(JSON.parse(storedMovies));
+      } else {
+        setMovies(mockMovies);
+        localStorage.setItem('movies', JSON.stringify(mockMovies));
       }
       
       if (!storedRegisteredUsers) {
@@ -76,6 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setEvents(eventsToSave);
     localStorage.setItem('events', JSON.stringify(eventsToSave));
   }
+
+  const persistMovies = (moviesToSave: Movie[]) => {
+    setMovies(moviesToSave);
+    localStorage.setItem('movies', JSON.stringify(moviesToSave));
+  };
 
   const login = (email: string, pass: string): boolean => {
     setIsLoading(true);
@@ -268,6 +281,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     persistEvents([...events, newEvent]);
   };
 
+  const createMovie = (movieData: Omit<Movie, 'id'>) => {
+    if (!user || user.role !== 'admin') {
+      toast({ title: "Unauthorized", description: "You must be an admin to add a movie.", variant: "destructive" });
+      return;
+    }
+
+    const newMovie: Movie = {
+      ...movieData,
+      id: `mov-${Date.now()}`,
+    };
+
+    persistMovies([...movies, newMovie]);
+  };
+
   const updateEventApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
     const updatedEvents = events.map(e => 
       e.id === eventId ? { ...e, approvalStatus: status } : e
@@ -301,6 +328,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     events,
     createEvent,
     updateEventApproval,
+    movies,
+    createMovie,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;

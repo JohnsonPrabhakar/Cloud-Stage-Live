@@ -9,17 +9,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/hooks/use-auth';
+import type React from 'react';
 
 export default function AddMoviePage() {
     const { toast } = useToast();
+    const { createMovie } = useAuth();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const data = Object.fromEntries(formData.entries());
+
+        const newMovie = {
+            title: data.title as string,
+            description: data.description as string,
+            category: data.category as string,
+            language: data.language as string,
+            // In a real app, you'd handle file uploads and generate a real URL
+            thumbnailUrl: 'https://placehold.co/600x400.png',
+            videoUrl: (data.videoUrl as string) || 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder
+        };
+        
+        createMovie(newMovie);
+
         toast({
             title: 'Movie Added!',
             description: 'The new movie has been successfully added to the platform.'
         });
-        // Here you would typically reset the form
+        e.currentTarget.reset();
     }
 
   return (
@@ -34,11 +52,11 @@ export default function AddMoviePage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Movie Title</Label>
-              <Input id="title" placeholder="e.g., The Great Adventure" required />
+              <Input id="title" name="title" placeholder="e.g., The Great Adventure" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="A brief synopsis of the movie" required />
+              <Textarea id="description" name="description" placeholder="A brief synopsis of the movie" required />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">

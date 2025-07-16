@@ -1,30 +1,31 @@
+
+'use client';
+
 import { MovieCard } from '@/components/MovieCard';
 import { FilterControls } from '@/components/FilterControls';
-import { mockMovies } from '@/lib/mock-data';
 import type { Movie } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function MoviesPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
+  const { movies: allMovies } = useAuth();
   const searchTerm = typeof searchParams?.search === 'string' ? searchParams.search : '';
   const category = typeof searchParams?.category === 'string' ? searchParams.category : 'all';
   const language = typeof searchParams?.language === 'string' ? searchParams.language : 'all';
 
-  // In a real app, this would be fetched from an API
-  const allMovies: Movie[] = mockMovies;
-
   const filteredMovies = allMovies.filter((movie: Movie) => {
     return (
       movie.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (category === 'all' || movie.category === category) &&
-      (language === 'all' || movie.language === language)
+      (category === 'all' || movie.category.toLowerCase() === category.toLowerCase()) &&
+      (language === 'all' || movie.language.toLowerCase() === language.toLowerCase())
     );
   });
 
-  const categories = ['all', ...Array.from(new Set(allMovies.map(m => m.category)))];
-  const languages = ['all', ...Array.from(new Set(allMovies.map(m => m.language)))];
+  const categories = allMovies.length > 0 ? ['all', ...Array.from(new Set(allMovies.map(m => m.category)))] : ['all'];
+  const languages = allMovies.length > 0 ? ['all', ...Array.from(new Set(allMovies.map(m => m.language)))] : ['all'];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -56,7 +57,7 @@ export default function MoviesPage({
         <div className="text-center py-16">
           <h2 className="text-2xl font-headline">No Movies Found</h2>
           <p className="text-muted-foreground mt-2">
-            There are no movies available at the moment. Please check back later.
+            No movies match your criteria. Please try different filters or check back later.
           </p>
         </div>
       )}
