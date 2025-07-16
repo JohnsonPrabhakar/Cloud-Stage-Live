@@ -24,6 +24,7 @@ export function MovieCard({ item }: { item: Movie }) {
             height={400}
             className="w-full h-48 object-cover"
             data-ai-hint="movie poster"
+            unoptimized
           />
         </Link>
       </div>
