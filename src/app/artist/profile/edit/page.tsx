@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +8,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from "react";
+import type React from "react";
 
 export default function EditArtistProfilePage() {
     const { user } = useAuth();
     const { toast } = useToast();
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user) {
+            setImagePreview(`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`);
+        }
+    }, [user]);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,12 +55,12 @@ export default function EditArtistProfilePage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="flex items-center gap-6">
                         <Avatar className="h-24 w-24">
-                            <AvatarImage src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}`} />
+                            {imagePreview && <AvatarImage src={imagePreview} />}
                             <AvatarFallback className="text-3xl">{getInitials(user.name)}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                             <Label htmlFor="picture">Profile Picture</Label>
-                             <Input id="picture" type="file" />
+                             <Label htmlFor="picture">Change Profile Picture</Label>
+                             <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} />
                              <p className="text-xs text-muted-foreground">Upload a new profile picture.</p>
                         </div>
                     </div>
