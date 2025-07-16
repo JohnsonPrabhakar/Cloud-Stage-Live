@@ -3,6 +3,7 @@ export type User = {
   name: string;
   email: string;
   password?: string;
+  phoneNumber?: string;
   interests?: string[];
   profilePictureUrl?: string;
   subscription?: {

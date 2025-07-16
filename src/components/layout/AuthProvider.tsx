@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  const register = (name: string, email: string, pass: string): boolean => {
+  const register = (name: string, email: string, pass: string, phoneNumber: string): boolean => {
     if (registeredUsers.some(u => u.email === email)) {
        toast({
         title: 'Registration Failed',
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       return false; 
     }
-    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass, role: 'user', applicationStatus: 'none' };
+    const newUser: User = { id: `user-${Date.now()}`, name, email, password: pass, phoneNumber, role: 'user', applicationStatus: 'none' };
     persistUsers([...registeredUsers, newUser]);
     
     toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });

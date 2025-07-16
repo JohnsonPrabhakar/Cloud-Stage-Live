@@ -25,6 +25,7 @@ export default function UserLoginPage() {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export default function UserLoginPage() {
   
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = register(registerName, registerEmail, registerPassword);
+    const success = register(registerName, registerEmail, registerPassword, registerPhone);
     if (success) {
         toast({ title: 'Registration Successful', description: 'Welcome to CloudStage Live! Please log in.' });
     } else {
@@ -101,6 +102,10 @@ export default function UserLoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>
                   <Input id="register-email" type="email" placeholder="you@example.com" required value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="register-phone">Phone Number</Label>
+                  <Input id="register-phone" type="tel" placeholder="Your phone number" required value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Password</Label>

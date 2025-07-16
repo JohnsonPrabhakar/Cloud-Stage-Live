@@ -9,7 +9,7 @@ interface AuthContextType {
   artistApplications: ArtistApplication[];
   events: Event[];
   login: (email: string, pass: string) => boolean;
-  register: (name: string, email: string, pass: string) => boolean;
+  register: (name: string, email: string, pass: string, phoneNumber: string) => boolean;
   artistRegister: (application: Omit<ArtistApplication, 'id' | 'status'>) => void;
   logout: () => void;
   updateApplicationStatus: (
