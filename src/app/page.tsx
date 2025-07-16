@@ -30,7 +30,9 @@ export default function Home() {
   const plugin = React.useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   )
-  const { events, movies } = useAuth();
+  const { events, movies, myTickets } = useAuth();
+  const myTicketEventIds = new Set(myTickets.map(t => t.eventId));
+
 
   const approvedEvents = events.filter(e => e.approvalStatus === 'Approved');
   const now = new Date();
@@ -83,9 +85,9 @@ export default function Home() {
       </section>
 
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-        <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} />
-        <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} />
-        <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} />
+        <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
+        <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
+        <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
         <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} plugin={plugin} />
       </div>
     </div>
@@ -95,11 +97,12 @@ export default function Home() {
 interface SectionCarouselProps<T> {
   title: string;
   items: T[];
-  CardComponent: React.FC<{ item: T }>;
+  CardComponent: React.FC<{ item: T, hasTicket?: boolean }>;
   plugin: React.MutableRefObject<any>;
+  ticketIds?: Set<string>;
 }
 
-function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, plugin }: SectionCarouselProps<T>) {
+function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, plugin, ticketIds }: SectionCarouselProps<T>) {
   if (items.length === 0) return null;
 
   return (
@@ -118,7 +121,7 @@ function SectionCarousel<T extends { id: string }>({ title, items, CardComponent
           {items.map((item, index) => (
             <CarouselItem key={item.id + index} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
               <div className="p-1 h-full">
-                <CardComponent item={item} />
+                <CardComponent item={item} hasTicket={ticketIds?.has(item.id)} />
               </div>
             </CarouselItem>
           ))}

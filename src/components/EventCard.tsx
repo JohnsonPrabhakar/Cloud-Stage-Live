@@ -1,4 +1,6 @@
 
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -11,7 +13,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Event } from '@/lib/types';
-import { Calendar, Ticket, Eye } from 'lucide-react';
+import { Calendar, Ticket } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface EventCardProps {
     item: Event;
@@ -21,6 +24,7 @@ interface EventCardProps {
 
 export function EventCard({ item, hasTicket = false, isArtistView = false }: EventCardProps) {
   const { id, title, artist, date, status, thumbnailUrl, price } = item;
+  const { toast } = useToast();
   
   const getBadgeVariant = (status: Event['status']) => {
     switch (status) {
@@ -33,15 +37,23 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
     }
   };
 
+  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (hasTicket && status !== 'Live') {
+      e.preventDefault();
+      toast({
+        title: 'Event Not Live',
+        description: 'This event has not started yet. Please check back later.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const renderButtonContent = () => {
     if (isArtistView) {
         return <>View Event</>;
     }
     if (hasTicket) {
         return <>Watch Now</>;
-    }
-    if (status === 'Live') {
-        return 'Watch Now';
     }
     return <><Ticket className="mr-2 h-4 w-4"/>Get Ticket</>;
   };
@@ -79,8 +91,10 @@ export function EventCard({ item, hasTicket = false, isArtistView = false }: Eve
           {price > 0 ? `Rs. ${price}` : 'Free'}
         </div>
         <Button asChild>
-          <Link href={`/events/${id}`}>
-            {renderButtonContent()}
+          <Link href={`/events/${id}`} onClick={(e) => hasTicket && status !== 'Live' && e.preventDefault()}>
+             <button onClick={handleButtonClick} className="w-full h-full flex items-center justify-center">
+                {renderButtonContent()}
+             </button>
           </Link>
         </Button>
       </CardFooter>

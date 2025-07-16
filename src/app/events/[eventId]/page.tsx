@@ -11,12 +11,14 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EventDetailPage() {
   const { events, myTickets } = useAuth();
   const params = useParams();
   const eventId = params.eventId as string;
   const [event, setEvent] = useState<Event | null>(null);
+  const { toast } = useToast();
   
   const hasTicket = myTickets.some(ticket => ticket.eventId === eventId);
 
@@ -26,6 +28,16 @@ export default function EventDetailPage() {
       setEvent(foundEvent || null);
     }
   }, [eventId, events]);
+
+  const handleWatchNowClick = () => {
+    if (event?.status !== 'Live') {
+      toast({
+        title: 'Event Not Live',
+        description: 'This event has not started yet. Please check back later.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (!event) {
     return (
@@ -53,7 +65,7 @@ export default function EventDetailPage() {
         </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          {hasTicket ? (
+          {hasTicket && event.status === 'Live' ? (
             <div className="aspect-video w-full mb-8 rounded-lg overflow-hidden bg-black">
               <iframe
                 className="w-full h-full"
@@ -119,7 +131,7 @@ export default function EventDetailPage() {
             </CardContent>
             <div className="p-4 md:p-6">
               {hasTicket ? (
-                 <Button className="w-full" size="lg">Watch Now</Button>
+                 <Button className="w-full" size="lg" onClick={handleWatchNowClick}>Watch Now</Button>
               ) : (
                  <Button asChild className="w-full" size="lg">
                     <Link href={`/events/${event.id}/purchase`}>
@@ -135,5 +147,3 @@ export default function EventDetailPage() {
     </div>
   );
 }
-
-    
