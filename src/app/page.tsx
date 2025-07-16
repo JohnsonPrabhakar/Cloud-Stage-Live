@@ -85,8 +85,8 @@ export default function Home() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} />
         <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} />
-        <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} plugin={plugin} />
         <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} />
+        <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} plugin={plugin} />
       </div>
     </div>
   );
