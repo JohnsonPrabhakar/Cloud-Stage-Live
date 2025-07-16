@@ -95,21 +95,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
 
     if (!foundUser) {
+        toast({
+            title: 'Login Failed',
+            description: 'Please check your credentials.',
+            variant: 'destructive'
+        });
         setIsLoading(false);
         return false;
     }
     
-    if (foundUser.role === 'artist') {
-        const application = artistApplications.find(app => app.email === email);
-        if (!application || application.status !== 'Approved') {
-            toast({
-                title: 'Application Not Approved',
-                description: 'Your artist application is still pending or has been rejected.',
-                variant: 'destructive'
-            });
-            setIsLoading(false);
-            return false;
-        }
+    if (foundUser.role === 'artist' && foundUser.applicationStatus !== 'approved') {
+        toast({
+            title: 'Application Not Approved',
+            description: 'Your artist application is still pending or has been rejected.',
+            variant: 'destructive'
+        });
+        setIsLoading(false);
+        return false;
     }
     
     if(foundUser.subscription?.expiryDate) {
@@ -221,7 +223,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
            return { ...u, applicationStatus: 'approved' as const };
         } else {
            // If rejected, reset their role and application status to allow re-application
-           return { ...u, role: 'user' as const, applicationStatus: 'none' as const };
+           return { ...u, role: 'user' as const, applicationStatus: 'rejected' as const };
         }
       });
       persistUsers(updatedUsers);
