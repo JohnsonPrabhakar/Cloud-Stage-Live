@@ -13,13 +13,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 export default function EventDetailPage() {
-  const { events } = useAuth();
+  const { events, myTickets } = useAuth();
   const params = useParams();
   const eventId = params.eventId as string;
   const [event, setEvent] = useState<Event | null>(null);
   
-  // This will need to be replaced with a real check based on the logged-in user
-  const hasTicket = false;
+  const hasTicket = myTickets.some(ticket => ticket.eventId === eventId);
 
   useEffect(() => {
     if (eventId) {
@@ -120,7 +119,7 @@ export default function EventDetailPage() {
             </CardContent>
             <div className="p-4 md:p-6">
               {hasTicket ? (
-                <Button disabled className="w-full"><Ticket className="mr-2 h-4 w-4"/> You have a ticket</Button>
+                 <Button className="w-full" size="lg">Watch Now</Button>
               ) : (
                  <Button asChild className="w-full" size="lg">
                     <Link href={`/events/${event.id}/purchase`}>
@@ -136,3 +135,5 @@ export default function EventDetailPage() {
     </div>
   );
 }
+
+    

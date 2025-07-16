@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function MyTicketsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, myTickets, events } = useAuth();
   const router = useRouter();
   const [purchasedEvents, setPurchasedEvents] = useState<Event[]>([]);
 
@@ -18,10 +18,17 @@ export default function MyTicketsPage() {
     if (!isLoading && !user) {
       router.push('/user-login');
     }
-    // In a real app, you would fetch the user's tickets and corresponding event data here
-    // For now, we just set it to an empty array.
-    setPurchasedEvents([]);
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (user && myTickets.length > 0 && events.length > 0) {
+      const ticketedEventIds = myTickets.map(ticket => ticket.eventId);
+      const userEvents = events.filter(event => ticketedEventIds.includes(event.id));
+      setPurchasedEvents(userEvents);
+    } else {
+        setPurchasedEvents([]);
+    }
+  }, [user, myTickets, events]);
 
   if (isLoading || !user) {
     return <p className="p-8 text-center">Loading your tickets...</p>;
@@ -65,3 +72,5 @@ export default function MyTicketsPage() {
     </div>
   );
 }
+
+    

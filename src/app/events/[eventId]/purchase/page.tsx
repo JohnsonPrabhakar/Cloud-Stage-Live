@@ -7,13 +7,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CreditCard, PartyPopper } from 'lucide-react';
 import type { Event } from '@/lib/types';
 
 export default function PurchasePage() {
-  const { user, isLoading, events } = useAuth();
-  const { toast } = useToast();
+  const { user, isLoading, events, purchaseTicket } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = params.eventId as string;
@@ -38,11 +36,9 @@ export default function PurchasePage() {
   }, [eventId, events, router]);
 
   const handlePurchase = () => {
+    if (!event) return;
+    purchaseTicket(event.id);
     setIsPurchased(true);
-    toast({
-      title: 'Purchase Successful!',
-      description: `You now have a ticket for ${event?.title}.`,
-    });
   };
 
   if (isLoading || !user || !event) {
@@ -108,3 +104,5 @@ export default function PurchasePage() {
     </div>
   );
 }
+
+    

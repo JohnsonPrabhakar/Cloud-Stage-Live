@@ -2,11 +2,11 @@
 'use client';
 
 import React, { useState, useEffect, ReactNode } from 'react';
-import type { User, Role, ArtistApplication, Event, Movie } from '@/lib/types';
+import type { User, Role, ArtistApplication, Event, Movie, Ticket } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockEvents, mockMovies } from '@/lib/mock-data';
+import { mockEvents, mockMovies, mockTickets as initialMockTickets } from '@/lib/mock-data';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [artistApplications, setArtistApplications] = useState<ArtistApplication[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedArtistApplications = localStorage.getItem('artistApplications');
       const storedEvents = localStorage.getItem('events');
       const storedMovies = localStorage.getItem('movies');
+      const storedTickets = localStorage.getItem('allTickets');
       
       if (storedUser && storedRole) {
         const parsedUser = JSON.parse(storedUser);
@@ -74,12 +77,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMovies(mockMovies);
         localStorage.setItem('movies', JSON.stringify(mockMovies));
       }
+       if (storedTickets) {
+          const parsedTickets = JSON.parse(storedTickets).map((t: Ticket) => ({...t, purchaseDate: new Date(t.purchaseDate)}));
+          setAllTickets(parsedTickets);
+       } else {
+          setAllTickets(initialMockTickets);
+          localStorage.setItem('allTickets', JSON.stringify(initialMockTickets));
+       }
       
     } catch (error) {
         console.error("Failed to parse local storage item.", error)
     }
     setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (user && allTickets.length > 0) {
+        const userTickets = allTickets.filter(t => t.userId === user.id);
+        setMyTickets(userTickets);
+    } else {
+        setMyTickets([]);
+    }
+  }, [user, allTickets]);
 
   const persistUsers = (users: User[]) => {
     setRegisteredUsers(users);
@@ -100,6 +119,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setMovies(moviesToSave);
     localStorage.setItem('movies', JSON.stringify(moviesToSave));
   };
+  
+  const persistTickets = (ticketsToSave: Ticket[]) => {
+    setAllTickets(ticketsToSave);
+    localStorage.setItem('allTickets', JSON.stringify(ticketsToSave));
+  }
 
   const login = (email: string, pass: string): boolean => {
     setIsLoading(true);
@@ -348,6 +372,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const purchaseTicket = (eventId: string) => {
+    if (!user) {
+        toast({ title: "Login Required", description: "You must be logged in to purchase a ticket.", variant: "destructive"});
+        router.push('/user-login');
+        return;
+    }
+
+    const newTicket: Ticket = {
+        id: `tkt-${Date.now()}`,
+        userId: user.id,
+        eventId,
+        purchaseDate: new Date()
+    };
+    persistTickets([...allTickets, newTicket]);
+
+    toast({
+        title: "Purchase Successful!",
+        description: "Your ticket has been added to 'My Tickets'."
+    });
+  }
+
   const logout = () => {
     setIsLoading(true);
     setUser(null);
@@ -377,7 +422,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     movies,
     createMovie,
     deleteMovie,
+    myTickets,
+    purchaseTicket,
   };
 
   return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
 };
+
+    
