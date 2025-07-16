@@ -74,7 +74,7 @@ export default function MovieManagementPage() {
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
                                             <Avatar className="rounded-sm">
-                                                <AvatarImage src={movie.thumbnailUrl} />
+                                                <AvatarImage src={movie.thumbnailUrl} alt={movie.title} />
                                                 <AvatarFallback>{movie.title.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <span>{movie.title}</span>
