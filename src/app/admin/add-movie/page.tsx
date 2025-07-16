@@ -15,9 +15,11 @@ import { ArrowLeft } from 'lucide-react';
 import { getYoutubeThumbnail, convertToEmbedUrl } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AddMoviePage() {
     const { createMovie } = useAuth();
+    const { toast } = useToast();
     const [videoUrl, setVideoUrl] = useState('');
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -41,7 +43,12 @@ export default function AddMoviePage() {
         const submittedVideoUrl = data.videoUrl as string;
         const thumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
 
-        const embedUrl = convertToEmbedUrl(submittedVideoUrl) || '';
+        const embedUrl = convertToEmbedUrl(submittedVideoUrl);
+
+        if (!embedUrl) {
+            toast({ title: 'Invalid YouTube URL', description: 'Please provide a valid YouTube video URL.', variant: 'destructive'});
+            return;
+        }
 
         const newMovie = {
             title: data.title as string,

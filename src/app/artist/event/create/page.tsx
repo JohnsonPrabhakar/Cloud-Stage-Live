@@ -83,7 +83,12 @@ export default function CreateEventPage() {
     
     const submittedVideoUrl = data.youtubeUrl as string;
     const finalThumbnailUrl = getYoutubeThumbnail(submittedVideoUrl) || 'https://placehold.co/600x400.png';
-    const embedUrl = convertToEmbedUrl(submittedVideoUrl) || '';
+    const embedUrl = convertToEmbedUrl(submittedVideoUrl);
+
+    if (!embedUrl) {
+        toast({ title: 'Invalid YouTube URL', description: 'Please provide a valid YouTube video URL.', variant: 'destructive'});
+        return;
+    }
 
     const newEventData = {
         title: data.title as string,
