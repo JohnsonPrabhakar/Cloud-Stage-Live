@@ -59,7 +59,19 @@ export default function AddMoviePage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
-                    <Input id="language" placeholder="e.g., English" required />
+                     <Select name="language" required>
+                        <SelectTrigger id="language">
+                            <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="english">English</SelectItem>
+                            <SelectItem value="tamil">Tamil</SelectItem>
+                            <SelectItem value="hindi">Hindi</SelectItem>
+                            <SelectItem value="kannada">Kannada</SelectItem>
+                            <SelectItem value="telugu">Telugu</SelectItem>
+                            <SelectItem value="malayalam">Malayalam</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
              <div className="space-y-2">
