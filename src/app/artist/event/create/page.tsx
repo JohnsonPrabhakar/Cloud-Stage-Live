@@ -82,6 +82,8 @@ export default function CreateEventPage() {
     const combinedDate = setMinutes(setHours(date, parseInt(time.hour, 10)), parseInt(time.minute, 10));
     
     const finalThumbnailUrl = getYoutubeThumbnail(youtubeUrl) || 'https://placehold.co/600x400.png';
+    const submittedVideoUrl = (data.youtubeUrl as string) || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    const embedUrl = submittedVideoUrl.replace('watch?v=', 'embed/');
 
     const newEventData = {
         title: data.title as string,
@@ -91,7 +93,7 @@ export default function CreateEventPage() {
         date: combinedDate,
         price: Number(data.price),
         thumbnailUrl: finalThumbnailUrl,
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
+        videoUrl: embedUrl
     };
 
     createEvent(newEventData);
@@ -118,16 +120,17 @@ export default function CreateEventPage() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="youtubeUrl">YouTube URL (for AI Description & Thumbnail)</Label>
+            <Label htmlFor="youtubeUrl">YouTube URL (for Video, AI Description & Thumbnail)</Label>
             <Input 
               id="youtubeUrl" 
               name="youtubeUrl"
               placeholder="https://youtube.com/watch?v=..." 
               value={youtubeUrl} 
               onChange={e => setYoutubeUrl(e.target.value)} 
+              required
             />
             <p className="text-xs text-muted-foreground">
-              Provide a YouTube link to auto-generate the event description and fetch the thumbnail.
+              Provide a YouTube link to set the event video, auto-generate the description, and fetch the thumbnail.
             </p>
           </div>
           

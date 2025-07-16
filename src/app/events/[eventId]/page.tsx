@@ -133,7 +133,7 @@ export default function EventDetailPage() {
             </CardContent>
             <div className="p-4 md:p-6">
               {hasTicket ? (
-                 <Button className="w-full" size="lg" onClick={handleWatchNowClick}>Watch Now</Button>
+                 <Button className="w-full" size="lg" onClick={handleWatchNowClick} disabled={event.status === 'Upcoming'}>Watch Now</Button>
               ) : (
                  <Button asChild className="w-full" size="lg">
                     <Link href={`/events/${event.id}/purchase`}>
