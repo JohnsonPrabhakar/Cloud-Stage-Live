@@ -9,13 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ArtistManagementPage() {
-    const { registeredUsers, artistApplications } = useAuth();
+    const { registeredUsers } = useAuth();
     const artists = registeredUsers.filter(u => u.role === 'artist' && u.applicationStatus === 'approved');
 
     const getArtistImageUrl = (artist: User) => {
-        if (artist.profilePictureUrl) return artist.profilePictureUrl;
-        const application = artistApplications.find(app => app.email === artist.email);
-        return application?.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${artist.email}`;
+        return artist.profilePictureUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${artist.email}`;
     }
 
     return (
