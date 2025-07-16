@@ -15,6 +15,15 @@ import { MovieCard } from '@/components/MovieCard';
 import type { Event, Movie } from '@/lib/types';
 import Autoplay from "embla-carousel-autoplay"
 import React from 'react';
+import Image from 'next/image';
+
+const heroImages = [
+  { src: 'https://placehold.co/1600x800', alt: 'Live music concert', hint: 'music concert' },
+  { src: 'https://placehold.co/1600x800', alt: 'Comedy show', hint: 'comedy show' },
+  { src: 'https://placehold.co/1600x800', alt: 'Yoga session', hint: 'yoga session' },
+  { src: 'https://placehold.co/1600x800', alt: 'Online workshop', hint: 'online workshop' },
+  { src: 'https://placehold.co/1600x800', alt: 'Talk show', hint: 'talk show' },
+]
 
 export default function Home() {
   const plugin = React.useRef(
@@ -28,14 +37,40 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center">
-      <section className="w-full bg-primary/10 py-12 md:py-20 lg:py-28 text-center">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-headline font-bold text-primary mb-4">
-            CloudStage Live
-          </h1>
-          <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto mb-8">
-            Your stage, anywhere. Discover and stream exclusive live events from artists around the world.
-          </p>
+      <section className="w-full relative">
+        <Carousel 
+          plugins={[plugin.current]}
+          className="w-full"
+          opts={{ loop: true }}
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
+        >
+          <CarouselContent>
+            {heroImages.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-[400px] md:h-[500px] lg:h-[600px] w-full">
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={image.hint}
+                  />
+                  <div className="absolute inset-0 bg-black/50" />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+        <div className="absolute inset-0 flex items-center justify-center text-center text-white">
+           <div className="container mx-auto px-4">
+             <h1 className="text-4xl md:text-6xl font-headline font-bold text-white mb-4 drop-shadow-lg">
+                CloudStage Live
+             </h1>
+             <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-8 drop-shadow-md">
+                Your stage, anywhere. Discover and stream exclusive live events from artists around the world.
+             </p>
+           </div>
         </div>
       </section>
 
