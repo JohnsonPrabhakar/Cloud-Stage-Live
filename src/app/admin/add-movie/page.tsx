@@ -1,9 +1,11 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,7 +42,20 @@ export default function AddMoviePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Input id="category" placeholder="e.g., Adventure" required />
+                    <Select name="category" required>
+                        <SelectTrigger id="category">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="action">Action</SelectItem>
+                            <SelectItem value="comedy">Comedy</SelectItem>
+                            <SelectItem value="devotional">Devotional</SelectItem>
+                            <SelectItem value="drama">Drama</SelectItem>
+                            <SelectItem value="love">Love</SelectItem>
+                            <SelectItem value="suspense">Suspense</SelectItem>
+                            <SelectItem value="kids">Kids</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
