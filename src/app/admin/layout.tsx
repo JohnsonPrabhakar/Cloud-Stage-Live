@@ -57,7 +57,7 @@ export default function AdminLayout({
               href={item.href}
               className={cn(
                   "flex items-center gap-2 transition-colors hover:text-foreground",
-                  pathname.startsWith(item.href) && (item.href !== '/admin' || pathname === '/admin') ? "text-foreground" : "text-muted-foreground"
+                  (pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/admin') ? "text-foreground" : "text-muted-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
