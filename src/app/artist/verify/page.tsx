@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,11 @@ export default function ArtistVerifyPage() {
                         <Label htmlFor="addressProof">Proof of Address</Label>
                         <Input id="addressProof" type="file" required />
                         <p className="text-xs text-muted-foreground">e.g., A recent utility bill or bank statement.</p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="videoLink">Performance Video Link</Label>
+                        <Input id="videoLink" placeholder="e.g., https://youtube.com/watch?v=..." required />
+                        <p className="text-xs text-muted-foreground">A link to a live performance video for verification.</p>
                     </div>
                     <div className="flex justify-end">
                         <Button type="submit">Submit for Verification</Button>
