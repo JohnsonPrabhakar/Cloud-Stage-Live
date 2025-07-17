@@ -84,20 +84,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Firebase Auth state listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      let activeListeners: (() => void)[] = [];
+
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+          // Clean up previous role-based listeners before setting new ones
+          activeListeners.forEach(unsub => unsub());
+          activeListeners = [];
+
           if (docSnap.exists()) {
             const userData = convertTimestamps(docSnap.data()) as User;
             setUser(userData);
             setRole(userData.role);
+
+            // Listener for the current user's tickets
+            const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', userData.id));
+            const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
+                const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+                setMyTickets(userTickets);
+            });
+            activeListeners.push(unsubscribeMyTickets);
+            
+            // Listeners for 'artist' role
+            if (userData.role === 'artist') {
+                const allTicketsQuery = query(collection(db, 'tickets'));
+                const unsubscribeAllTicketsForArtist = onSnapshot(allTicketsQuery, (snapshot) => {
+                    const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+                    setAllTickets(allTicketsData);
+                });
+                activeListeners.push(unsubscribeAllTicketsForArtist);
+            }
+
+            // Listeners for 'admin' role
+            if (userData.role === 'admin') {
+                const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+                    setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
+                });
+                const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
+                    setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
+                });
+                const unsubscribeAllTicketsForAdmin = onSnapshot(collection(db, "tickets"), (snapshot) => {
+                    setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
+                });
+                activeListeners.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTicketsForAdmin);
+            }
           } else {
-            // This case handles if a user exists in Auth but not in Firestore.
             signOut(auth);
           }
           setIsLoading(false);
         });
-        return () => unsubscribeUser();
+        activeListeners.push(unsubscribeUser);
       } else {
         setUser(null);
         setRole(null);
@@ -107,62 +144,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAllTickets([]);
         setIsLoading(false);
       }
+
+      return () => {
+        activeListeners.forEach(unsub => unsub());
+      };
     });
 
     return () => unsubscribeAuth();
   }, []);
-  
-  // Effect for role-based data fetching
-  useEffect(() => {
-    if (!user) {
-        // Clear all protected data if user logs out
-        setMyTickets([]);
-        setAllTickets([]);
-        setRegisteredUsers([]);
-        setArtistApplications([]);
-        return;
-    }
-
-    let listeners: (() => void)[] = [];
-
-    // Listener for the current user's tickets
-    const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', user.id));
-    const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
-        const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-        setMyTickets(userTickets);
-    });
-    listeners.push(unsubscribeMyTickets);
-
-    // Listeners for 'artist' role
-    if (user.role === 'artist') {
-        const allTicketsQuery = query(collection(db, 'tickets'));
-        const unsubscribeAllTicketsForArtist = onSnapshot(allTicketsQuery, (snapshot) => {
-            const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-            setAllTickets(allTicketsData);
-        });
-        listeners.push(unsubscribeAllTicketsForArtist);
-    }
-
-    // Listeners for 'admin' role
-    if (user.role === 'admin') {
-        const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-            setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
-        });
-        const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
-            setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
-        });
-        const unsubscribeAllTicketsForAdmin = onSnapshot(collection(db, "tickets"), (snapshot) => {
-            setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
-        });
-        listeners.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTicketsForAdmin);
-    }
-
-    // Cleanup function
-    return () => {
-        listeners.forEach(unsub => unsub());
-    };
-  }, [user]);
-
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     setIsLoading(true);
