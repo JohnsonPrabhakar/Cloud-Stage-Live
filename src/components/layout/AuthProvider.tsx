@@ -405,31 +405,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
       return;
     }
-    
-    let usedSubscriptionCredit = false;
-    // Check if user has an active subscription with credits
+
+    // MOCK IMPLEMENTATION: Add ticket to local state only
+    const eventDetails = events.find(e => e.id === eventId);
+    const mockTicket: Ticket = {
+      id: `mock_${Date.now()}`, // Mock ID
+      userId: user.id,
+      eventId: eventId,
+      artistId: eventDetails?.artistId || null,
+      purchaseDate: new Date(),
+    };
+
+    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
+
+    // Simulate subscription credit usage if applicable
     if (user.subscription && user.subscription.eventCount > 0) {
       const event = events.find(e => e.id === eventId);
-      if (event && event.price > 0) { // Only use credit for paid events
-        await updateDoc(doc(db, 'users', user.id), {
-          'subscription.eventCount': user.subscription.eventCount - 1
-        });
-        usedSubscriptionCredit = true;
+      if (event && event.price > 0) {
+         const updatedUser = {
+           ...user,
+           subscription: {
+             ...user.subscription,
+             eventCount: user.subscription.eventCount - 1,
+           }
+         };
+         setUser(updatedUser); // Update local user state
       }
     }
     
-    const eventDetails = events.find(e => e.id === eventId);
-    
-    const newTicket = {
-        userId: user.id,
-        eventId,
-        artistId: eventDetails?.artistId || null,
-        purchaseDate: serverTimestamp(),
-        usedSubscriptionCredit,
-    };
-    await addDoc(collection(db, 'tickets'), newTicket);
-
-    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    toast({ title: "Mock Purchase Successful!", description: "Your ticket has been added to 'My Tickets' for this session."});
   }
 
   const logout = async () => {
@@ -466,5 +470,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
