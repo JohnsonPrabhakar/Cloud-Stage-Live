@@ -64,7 +64,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
-  const router = useRouter();
   const myTicketsUnsubRef = useRef<(() => void) | null>(null);
 
   // Listen for public data always
@@ -396,35 +395,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const purchaseTicket = async (eventId: string) => {
     if (!user) {
-        toast({ title: "Login Required", description: "You must be logged in to purchase a ticket.", variant: "destructive"});
-        router.push('/user-login');
-        return;
+      toast({ title: "Login Required", description: "You must be logged in to purchase a ticket.", variant: "destructive"});
+      router.push('/user-login');
+      return;
     }
-
+  
     if (myTickets.some(t => t.eventId === eventId)) {
-        toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
-        return;
+      toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
+      return;
     }
-
+  
     const eventDetails = events.find(e => e.id === eventId);
     if (!eventDetails) {
-        toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
-        return;
+      toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
+      return;
     }
-
-    try {
-        const newTicket = {
-            userId: user.id,
-            eventId: eventId,
-            artistId: eventDetails.artistId || null,
-            purchaseDate: serverTimestamp(),
-        };
-        await addDoc(collection(db, 'tickets'), newTicket);
-        toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
-    } catch (error: any) {
-        console.error("Error purchasing ticket:", error);
-        toast({ title: "Purchase Failed", description: error.message, variant: "destructive"});
-    }
+  
+    // MOCK IMPLEMENTATION: Add ticket to local state only
+    const mockTicket: Ticket = {
+      id: `mock-${new Date().getTime()}`, // A mock ID
+      userId: user.id,
+      eventId: eventId,
+      artistId: eventDetails.artistId || null,
+      purchaseDate: new Date(), // Use a JS Date for mock
+    };
+  
+    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
+    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
   }
 
   const logout = async () => {
