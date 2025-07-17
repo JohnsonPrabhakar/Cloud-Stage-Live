@@ -84,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       let protectedListeners: (() => void)[] = [];
+      setIsLoading(true);
 
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -128,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, (error) => {
             console.error("Error listening to user document:", error);
             signOut(auth);
+            setIsLoading(false);
         });
 
         protectedListeners.push(unsubscribeUserDoc);
@@ -401,3 +403,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+    
