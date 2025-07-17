@@ -6,7 +6,7 @@ import type { User, Role, ArtistApplication, Event, Movie, Ticket } from '@/lib/
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockEvents, mockMovies, mockTickets as initialMockTickets } from '@/lib/mock-data';
+import { mockEvents, mockMovies, mockTickets as initialMockTickets, mockUsers as initialMockUsers, mockApplications } from '@/lib/mock-data';
 import { getEventStatus } from '@/lib/utils';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -43,25 +43,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (storedRegisteredUsers) {
         const parsedUsers: User[] = JSON.parse(storedRegisteredUsers);
-        // Ensure user objects have all required fields after parsing
-        const validatedUsers = parsedUsers.map(u => ({
-          ...u,
-          applicationStatus: u.applicationStatus || 'none'
-        }));
-        setRegisteredUsers(validatedUsers);
+        setRegisteredUsers(parsedUsers.map(u => ({...u, applicationStatus: u.applicationStatus || 'none'})));
       } else {
-        const adminUser: User = { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin123', role: 'admin', applicationStatus: 'approved' };
-        setRegisteredUsers([adminUser]);
-        localStorage.setItem('registeredUsers', JSON.stringify([adminUser]));
+        const defaultUsers: User[] = [
+            { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin', role: 'admin', applicationStatus: 'approved' },
+            ...initialMockUsers,
+        ];
+        setRegisteredUsers(defaultUsers);
+        localStorage.setItem('registeredUsers', JSON.stringify(defaultUsers));
       }
 
        if (storedArtistApplications) {
-        const parsedArtistApplications = JSON.parse(storedArtistApplications).map((app: ArtistApplication) => ({
-            ...app,
-            // Fallback for old data that might not have this URL
-            artistImageUrl: app.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${app.email}`
-        }));
-        setArtistApplications(parsedArtistApplications);
+        setArtistApplications(JSON.parse(storedArtistApplications));
+      } else {
+        setArtistApplications(mockApplications);
+        localStorage.setItem('artistApplications', JSON.stringify(mockApplications));
       }
 
       if (storedEvents) {
@@ -70,8 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return {
               ...e,
               date,
-              duration: e.duration || 60, // Fallback for old events
-              status: getEventStatus(date, e.duration || 60),
+              duration: e.duration || 90,
+              status: getEventStatus(date, e.duration || 90),
             };
           });
           setEvents(parsedEvents);
@@ -98,6 +94,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Failed to parse local storage item.", error)
     }
     setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEvents(prevEvents => 
+        prevEvents.map(e => ({
+          ...e,
+          status: getEventStatus(e.date, e.duration)
+        }))
+      );
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -175,7 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (foundUser.role === 'admin') router.push('/admin');
     else if (foundUser.role === 'artist') router.push('/artist/dashboard');
-    else router.push('/');
+    else router.push('/user-dashboard');
 
     setIsLoading(false);
     return true;
@@ -230,7 +239,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ...applicationData,
         id: `app-${Date.now()}`,
         status: 'Pending',
-        artistImageUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
      }
      
      const newArtistUser: User = { 
@@ -240,7 +248,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
        password: newApplication.password,
        role: 'artist',
        applicationStatus: 'pending',
-       profilePictureUrl: newApplication.artistImageUrl,
+       profilePictureUrl: newApplication.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${newApplication.email}`,
      };
      persistUsers([...registeredUsers, newArtistUser]);
      persistApplications([...artistApplications, newApplication]);
@@ -249,7 +257,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: 'Application Submitted!',
       description: 'Your application is pending review. We will notify you upon approval.',
     });
-    router.push('/admin-login');
+    router.push('/user-login');
   };
 
   const updateApplicationStatus = (applicationId: string, status: 'Approved' | 'Rejected', reason?: string) => {
@@ -276,12 +284,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = (updatedData: Partial<User>) => {
     if (!user) return;
     
-    // Create the updated user object by merging current user data with new data.
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
 
-    // Update the user in the main list of registered users as well.
     const updatedRegisteredUsers = registeredUsers.map(u => 
       u.id === user.id ? updatedUser : u
     );
@@ -388,6 +394,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
+    if (myTickets.some(t => t.eventId === eventId)) {
+      toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
+      return;
+    }
+
+    if (user.subscription && user.subscription.eventCount > 0) {
+      const updatedUser: User = {
+        ...user,
+        subscription: {
+          ...user.subscription,
+          eventCount: user.subscription.eventCount - 1
+        }
+      };
+      updateUserProfile(updatedUser);
+    } else {
+       const event = events.find(e => e.id === eventId);
+       if (!event || event.price > 0) {
+          // Here you would integrate a payment gateway
+       }
+    }
+
     const newTicket: Ticket = {
         id: `tkt-${Date.now()}`,
         userId: user.id,
@@ -436,5 +463,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     allTickets,
   };
 
-  return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

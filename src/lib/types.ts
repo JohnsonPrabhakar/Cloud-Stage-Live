@@ -1,3 +1,4 @@
+
 export type User = {
   id: string;
   name: string;
@@ -63,5 +64,5 @@ export type ArtistApplication = {
   profileLink: string;
   description: string;
   rejectionReason?: string;
-  artistImageUrl?: string;
+  artistImageUrl?: string | null;
 };

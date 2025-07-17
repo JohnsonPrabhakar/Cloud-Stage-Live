@@ -27,7 +27,7 @@ export default function ArtistLayout({
 
   useEffect(() => {
     if (!isLoading && role !== 'artist') {
-      router.push('/admin-login');
+      router.push('/user-login');
     }
   }, [role, isLoading, router]);
 

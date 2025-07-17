@@ -1,4 +1,4 @@
-import type { Event, Movie, User, Ticket } from './types';
+import type { Event, Movie, User, Ticket, ArtistApplication } from './types';
 
 // Initial mock users. The admin user will be added in AuthProvider if not present.
 export const mockUsers: User[] = [];
@@ -11,3 +11,6 @@ export const mockMovies: Movie[] = [];
 
 // Mock tickets data.
 export const mockTickets: Ticket[] = [];
+
+// Mock artist applications data.
+export const mockApplications: ArtistApplication[] = [];

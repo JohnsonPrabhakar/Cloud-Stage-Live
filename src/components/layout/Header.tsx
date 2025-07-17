@@ -18,8 +18,7 @@ import { Logo } from '@/components/Logo';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
+  SheetClose,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import type { Role } from '@/lib/types';
@@ -39,9 +38,9 @@ export default function Header() {
   }
   
   const visibleNavLinks = navLinks.filter(link => {
-    if (!link.auth) return true; // Public links are always visible
-    if (!user) return false; // Auth links require a user
-    if (link.roles && !link.roles.includes(role)) return false; // Role-specific links
+    if (!link.auth) return true;
+    if (!user) return false;
+    if (link.roles && !link.roles.includes(role)) return false;
     return true;
   });
 
@@ -52,7 +51,6 @@ export default function Header() {
           <Logo />
         </div>
         
-        {/* Mobile Menu */}
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -61,21 +59,21 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
-               <SheetHeader>
-                <SheetTitle className="sr-only">Main Menu</SheetTitle>
-              </SheetHeader>
-              <div className="py-4">
-                <Logo />
+               <div className="py-4">
+                <SheetClose asChild>
+                  <Logo />
+                </SheetClose>
               </div>
               <nav className="flex flex-col gap-4">
                 {visibleNavLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
+                  <SheetClose asChild key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </SheetClose>
                 ))}
               </nav>
             </SheetContent>
@@ -121,6 +119,7 @@ export default function Header() {
                   <DropdownMenuSeparator />
                   {role === 'user' && (
                     <>
+                      <DropdownMenuItem asChild><Link href="/user-dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/my-tickets"><Ticket className="mr-2 h-4 w-4" />My Tickets</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild><Link href="/artist-register"><Mic className="mr-2 h-4 w-4" />Become an Artist</Link></DropdownMenuItem>

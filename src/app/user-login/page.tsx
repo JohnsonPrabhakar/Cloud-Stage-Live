@@ -38,6 +38,8 @@ export default function UserLoginPage() {
     const success = register(registerName, registerEmail, registerPassword, registerPhone);
     if (success) {
         setActiveTab('login');
+        setLoginEmail(registerEmail); // Pre-fill login form
+        setLoginPassword('');
         setRegisterName('');
         setRegisterEmail('');
         setRegisterPassword('');
@@ -60,9 +62,9 @@ export default function UserLoginPage() {
           <Card>
             <form onSubmit={handleLogin}>
               <CardHeader>
-                <CardTitle className="font-headline">User Login</CardTitle>
+                <CardTitle className="font-headline">Login to Your Account</CardTitle>
                 <CardDescription>
-                  Access your account to view your tickets and events.
+                  Enter your credentials to access your dashboard.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -77,12 +79,6 @@ export default function UserLoginPage() {
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full">Login</Button>
-                 <p className="text-center text-sm text-muted-foreground">
-                  Are you an artist?{' '}
-                  <Link href="/admin-login" className="font-semibold text-primary hover:underline">
-                    Login here
-                  </Link>
-                </p>
               </CardFooter>
             </form>
           </Card>
@@ -114,8 +110,14 @@ export default function UserLoginPage() {
                   <Input id="register-password" type="password" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full">Register</Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Want to host events?{' '}
+                  <Link href="/artist-register" className="font-semibold text-primary hover:underline">
+                    Become an artist
+                  </Link>
+                </p>
               </CardFooter>
             </form>
           </Card>

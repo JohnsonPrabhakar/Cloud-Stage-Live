@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog"
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,6 +35,11 @@ const PolicyContent = ({ title, children }: { title: string, children: React.Rea
          {children}
         </div>
       </ScrollArea>
+       <DialogClose asChild>
+          <Button type="button" variant="outline" className="mt-4">
+            Close
+          </Button>
+      </DialogClose>
     </DialogContent>
 )
 
@@ -73,7 +79,7 @@ export default function ArtistRegisterPage() {
         category: data.category as string,
         profileLink: data.profileLink as string,
         description: data.description as string,
-        artistImageUrl: artistImage ?? undefined,
+        artistImageUrl: artistImage,
     };
     
     artistRegister(newApplication);
@@ -178,8 +184,8 @@ export default function ArtistRegisterPage() {
               Submit Application
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              Already have an artist account?{' '}
-              <Link href="/admin-login" className="font-semibold text-primary hover:underline">
+              Already have an account?{' '}
+              <Link href="/user-login" className="font-semibold text-primary hover:underline">
                 Login here
               </Link>
             </p>
