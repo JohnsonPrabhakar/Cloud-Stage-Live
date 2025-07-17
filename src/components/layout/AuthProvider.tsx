@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
-  const myTicketsUnsubRef = useRef<() => void | null>(null);
+  const myTicketsUnsubRef = useRef<(() => void) | null>(null);
 
   // Listen for public data always
   useEffect(() => {
@@ -401,32 +401,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/user-login');
       return;
     }
-  
+
     if (myTickets.some(t => t.eventId === eventId)) {
-      toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
-      return;
+        toast({ title: "Already Owned", description: "You already have a ticket for this event." });
+        return;
     }
-  
+
     const eventDetails = events.find(e => e.id === eventId);
     if (!eventDetails) {
-      toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
-      return;
+        toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
+        return;
     }
-  
-    const newTicket = {
-      userId: user.id,
-      eventId,
-      artistId: eventDetails.artistId || null,
-      purchaseDate: serverTimestamp(),
+
+    // Mock implementation: Add ticket to local state only
+    const newTicket: Ticket = {
+        id: `mock_${Date.now()}`, // Create a mock ID
+        userId: user.id,
+        eventId,
+        artistId: eventDetails.artistId || null,
+        purchaseDate: new Date(),
     };
-  
-    try {
-      await addDoc(collection(db, 'tickets'), newTicket);
-      toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
-    } catch (error: any) {
-      toast({ title: "Purchase Failed", description: error.message, variant: "destructive" });
-    }
-  }
+
+    setMyTickets(prevTickets => [...prevTickets, newTicket]);
+    toast({ title: "Purchase Successful!", description: "Your mock ticket has been added."});
+  };
 
   const logout = async () => {
     setIsLoading(true);
