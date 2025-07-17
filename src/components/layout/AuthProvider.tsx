@@ -126,8 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(userData);
                 setRole(userData.role);
             } else {
-                // This case can happen if a user is in Auth but not in Firestore.
-                // Log them out to prevent inconsistent state.
                 signOut(auth);
                 setUser(null);
                 setRole(null);
@@ -196,7 +194,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const firebaseUser = userCredential.user;
         
-        // Assign role based on email
         const userRole: Role = email === 'admin@cloudstage.live' ? 'admin' : 'user';
 
         const newUser: User = { 
@@ -407,7 +404,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
-
-    

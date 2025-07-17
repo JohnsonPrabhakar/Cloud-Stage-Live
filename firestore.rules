@@ -3,47 +3,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // By default, block all reads and writes
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Allow users to read/write their own data
+    // Users can read/write their own profile and tickets
     match /users/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /tickets/{ticketId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
-    // Anyone can read events and movies
+    // Artists can read/write their own profile
+    match /artists/{artistId} {
+      allow read, write: if request.auth != null && request.auth.uid == artistId;
+    }
+
+    // Events can be read by anyone, only written by the artist who created them
     match /events/{eventId} {
       allow read: if true;
-      // Allow artists to create/update their own events
-      allow create, update: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'artist';
-    }
-
-    match /movies/{movieId} {
-      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == resource.data.createdBy;
     }
     
-    // Allow logged-in users to create/read their own tickets
-    match /tickets/{ticketId} {
-        allow read, create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    // Movies can be read by anyone, but only written by an authenticated user (admin in app logic)
+    match /movies/{movieId} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
-    // Allow anyone to submit an artist application
+    // Other collections are admin/app-logic controlled
     match /artistApplications/{applicationId} {
-        allow create: if true;
-        allow read: if request.auth != null; // Let admins read
+      allow read, write: if request.auth != null;
     }
 
-    // Admin access for specific collections (handled in-app logic, but rules can be a safeguard)
-    // For simplicity here, we allow authenticated users to perform actions that admins will do.
-    // In a production app, this would be locked down to a specific admin role check.
-     match /artistApplications/{applicationId} {
-        allow update: if request.auth != null;
-     }
-      match /movies/{movieId} {
-        allow create, update, delete: if request.auth != null;
+    match /tickets/{ticketId} {
+       allow read, write: if request.auth != null;
     }
   }
 }
