@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
 import { useAuth } from '@/hooks/use-auth';
+import { useMemo } from 'react';
 
 const chartConfig = {
   ticketsSold: {
@@ -26,26 +27,34 @@ const chartConfig = {
 export default function ArtistAnalyticsPage() {
   const { user, events, allTickets } = useAuth();
   
-  const artistEvents = events.filter(e => e.artistId === user?.id);
-  const artistEventIds = new Set(artistEvents.map(e => e.id));
+  const artistEvents = useMemo(() => {
+      if (!user) return [];
+      return events.filter(e => e.artistId === user.id);
+  }, [user, events]);
   
-  // Ensure allTickets is not undefined before filtering
-  const artistTickets = allTickets ? allTickets.filter(t => artistEventIds.has(t.eventId)) : [];
+  const artistEventIds = useMemo(() => new Set(artistEvents.map(e => e.id)), [artistEvents]);
 
-  const chartData = artistEvents.map(event => {
-    const ticketsForEvent = artistTickets.filter(t => t.eventId === event.id);
-    const ticketsSoldCount = ticketsForEvent.length;
-    const revenueForEvent = ticketsSoldCount * event.price;
+  const artistTickets = useMemo(() => {
+    if (!allTickets) return [];
+    return allTickets.filter(t => artistEventIds.has(t.eventId));
+  }, [allTickets, artistEventIds]);
 
-    return {
-      name: event.title.slice(0, 15) + (event.title.length > 15 ? '...' : ''),
-      ticketsSold: ticketsSoldCount,
-      revenue: revenueForEvent,
-    };
-  });
+  const chartData = useMemo(() => {
+    return artistEvents.map(event => {
+      const ticketsForEvent = artistTickets.filter(t => t.eventId === event.id);
+      const ticketsSoldCount = ticketsForEvent.length;
+      const revenueForEvent = ticketsSoldCount * event.price;
 
-  const totalRevenue = chartData.reduce((acc, item) => acc + item.revenue, 0);
-  const totalTicketsSold = chartData.reduce((acc, item) => acc + item.ticketsSold, 0);
+      return {
+        name: event.title.slice(0, 15) + (event.title.length > 15 ? '...' : ''),
+        ticketsSold: ticketsSoldCount,
+        revenue: revenueForEvent,
+      };
+    });
+  }, [artistEvents, artistTickets]);
+
+  const totalRevenue = useMemo(() => chartData.reduce((acc, item) => acc + item.revenue, 0), [chartData]);
+  const totalTicketsSold = useMemo(() => chartData.reduce((acc, item) => acc + item.ticketsSold, 0), [chartData]);
 
   return (
     <div>
