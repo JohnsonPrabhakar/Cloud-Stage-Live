@@ -40,18 +40,16 @@ import { AuthContext } from '@/contexts/AuthContext';
 // Helper to convert Firestore timestamps to Dates in nested objects
 const convertTimestamps = (data: any): any => {
     if (!data) return data;
-    const new_data = Array.isArray(data) ? [] : {};
-    for (const key in data) {
-        const value = data[key];
-        if (value instanceof Timestamp) {
-            new_data[key] = value.toDate();
-        } else if (typeof value === 'object' && value !== null) {
-            new_data[key] = convertTimestamps(value);
-        } else {
-            new_data[key] = value;
+    if (data instanceof Timestamp) return data.toDate();
+    if (Array.isArray(data)) return data.map(convertTimestamps);
+    if (typeof data === 'object') {
+        const newData: { [key: string]: any } = {};
+        for (const key in data) {
+            newData[key] = convertTimestamps(data[key]);
         }
+        return newData;
     }
-    return new_data;
+    return data;
 }
 
 
@@ -406,34 +404,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // MOCK IMPLEMENTATION: Add ticket to local state only
     const eventDetails = events.find(e => e.id === eventId);
-    const mockTicket: Ticket = {
-      id: `mock_${Date.now()}`, // Mock ID
+    if (!eventDetails) {
+        toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
+        return;
+    }
+
+    const newTicket = {
       userId: user.id,
       eventId: eventId,
-      artistId: eventDetails?.artistId || null,
-      purchaseDate: new Date(),
+      artistId: eventDetails.artistId || null,
+      purchaseDate: serverTimestamp(),
     };
 
-    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
+    try {
+        await addDoc(collection(db, 'tickets'), newTicket);
+        
+        // Simulate subscription credit usage if applicable
+        if (user.subscription && user.subscription.eventCount > 0 && eventDetails.price > 0) {
+            const updatedUser = {
+            ...user,
+            subscription: {
+                ...user.subscription,
+                eventCount: user.subscription.eventCount - 1,
+            }
+            };
+            setUser(updatedUser); // Update local user state
+            await updateDoc(doc(db, 'users', user.id), { subscription: updatedUser.subscription });
+        }
+        
+        toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
 
-    // Simulate subscription credit usage if applicable
-    if (user.subscription && user.subscription.eventCount > 0) {
-      const event = events.find(e => e.id === eventId);
-      if (event && event.price > 0) {
-         const updatedUser = {
-           ...user,
-           subscription: {
-             ...user.subscription,
-             eventCount: user.subscription.eventCount - 1,
-           }
-         };
-         setUser(updatedUser); // Update local user state
-      }
+    } catch (error: any) {
+        toast({ title: "Purchase Failed", description: error.message, variant: "destructive" });
     }
-    
-    toast({ title: "Mock Purchase Successful!", description: "Your ticket has been added to 'My Tickets' for this session."});
   }
 
   const logout = async () => {

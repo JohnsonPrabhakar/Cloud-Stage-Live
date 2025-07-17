@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { DollarSign, Ticket, User, Users } from 'lucide-react';
+import { DollarSign, Ticket, User, Users, CalendarIcon } from 'lucide-react';
 import {
   ChartContainer,
   ChartTooltip,
@@ -11,8 +11,14 @@ import {
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { useAuth } from '@/hooks/use-auth';
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { DateRange } from 'react-day-picker';
+import { addDays, format, subDays } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const chartConfig = {
   revenue: {
@@ -28,43 +34,71 @@ const chartConfig = {
 export default function AdminAnalyticsPage() {
   const { registeredUsers, allTickets, events } = useAuth();
   
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 29),
+    to: new Date(),
+  });
+
+  const filteredTickets = useMemo(() => {
+    if (!allTickets) return [];
+    if (!date || !date.from) return allTickets;
+    
+    const from = date.from;
+    // Set 'to' to the end of the selected day
+    const to = date.to ? new Date(date.to.setHours(23, 59, 59, 999)) : from;
+
+    return allTickets.filter(ticket => {
+        const purchaseDate = new Date(ticket.purchaseDate);
+        return purchaseDate >= from && purchaseDate <= to;
+    })
+  }, [allTickets, date]);
+  
   const totalPlatformUsers = registeredUsers.filter(u => u.role === 'user').length;
   const totalArtists = registeredUsers.filter(u => u.role === 'artist' && u.applicationStatus === 'approved').length;
-  const totalTicketsSold = allTickets?.length || 0;
+  const totalTicketsSold = filteredTickets?.length || 0;
   
   const totalRevenue = useMemo(() => {
-    if (!allTickets || !events) return 0;
-    return allTickets.reduce((acc, ticket) => {
+    if (!filteredTickets || !events) return 0;
+    return filteredTickets.reduce((acc, ticket) => {
       const event = events.find(e => e.id === ticket.eventId);
       return acc + (event?.price || 0);
     }, 0);
-  }, [allTickets, events]);
+  }, [filteredTickets, events]);
 
   const chartData = useMemo(() => {
     const monthlyData: { [key: string]: { month: string, revenue: number, events: Set<string> } } = {};
 
-    if (!allTickets || !events) return [];
+    if (!filteredTickets || !events) return [];
     
-    allTickets.forEach(ticket => {
+    filteredTickets.forEach(ticket => {
       const event = events.find(e => e.id === ticket.eventId);
       if (!event) return;
 
-      const month = new Date(ticket.purchaseDate).toLocaleString('default', { month: 'long', year: 'numeric' });
-      const monthShort = new Date(ticket.purchaseDate).toLocaleString('default', { month: 'short' });
+      const purchaseDate = new Date(ticket.purchaseDate);
+      // For date ranges less than a year, group by day. Otherwise, group by month.
+      const dateDiff = date?.to && date.from ? (date.to.getTime() - date.from.getTime()) / (1000 * 3600 * 24) : 365;
       
-      if (!monthlyData[month]) {
-        monthlyData[month] = { month: monthShort, revenue: 0, events: new Set() };
+      let key: string, shortKey: string;
+      if (dateDiff < 365) {
+          key = purchaseDate.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
+          shortKey = purchaseDate.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+      } else {
+          key = purchaseDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+          shortKey = purchaseDate.toLocaleString('default', { month: 'short' });
       }
       
-      monthlyData[month].revenue += event.price;
-      monthlyData[month].events.add(event.id);
+      if (!monthlyData[key]) {
+        monthlyData[key] = { month: shortKey, revenue: 0, events: new Set() };
+      }
+      
+      monthlyData[key].revenue += event.price;
+      monthlyData[key].events.add(event.id);
     });
     
-    // Sort data chronologically - this is a simplified sort, a more robust one might be needed for multi-year data
-    const sortedMonths = Object.keys(monthlyData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    const sortedKeys = Object.keys(monthlyData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    return sortedMonths.map(month => {
-      const data = monthlyData[month];
+    return sortedKeys.map(monthKey => {
+      const data = monthlyData[monthKey];
       return {
         month: data.month,
         revenue: data.revenue,
@@ -72,13 +106,13 @@ export default function AdminAnalyticsPage() {
       }
     });
 
-  }, [allTickets, events]);
+  }, [filteredTickets, events, date]);
 
   const eventSalesData = useMemo(() => {
-    if (!events || !allTickets) return [];
+    if (!events || !filteredTickets) return [];
 
     return events.map(event => {
-      const ticketsSold = allTickets.filter(ticket => ticket.eventId === event.id).length;
+      const ticketsSold = filteredTickets.filter(ticket => ticket.eventId === event.id).length;
       const revenue = ticketsSold * event.price;
       return {
         id: event.id,
@@ -86,13 +120,55 @@ export default function AdminAnalyticsPage() {
         ticketsSold,
         revenue,
       };
-    }).sort((a, b) => b.revenue - a.revenue); // Sort by revenue descending
-  }, [events, allTickets]);
+    })
+    .filter(event => event.ticketsSold > 0) // Only show events with sales in the selected range
+    .sort((a, b) => b.revenue - a.revenue); // Sort by revenue descending
+  }, [events, filteredTickets]);
 
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold font-headline">Platform Analytics</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-3xl font-bold font-headline">Platform Analytics</h1>
+        <div className="grid gap-2">
+           <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y")} -{" "}
+                      {format(date.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -101,7 +177,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rs. {totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">All-time platform revenue</p>
+            <p className="text-xs text-muted-foreground">For selected period</p>
           </CardContent>
         </Card>
         <Card>
@@ -111,7 +187,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalTicketsSold.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">All-time tickets sold</p>
+            <p className="text-xs text-muted-foreground">For selected period</p>
           </CardContent>
         </Card>
         <Card>
@@ -139,6 +215,7 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader>
             <CardTitle className="font-headline">Revenue and Events Overview</CardTitle>
+            <CardDescription>Performance for the selected date range.</CardDescription>
         </CardHeader>
         <CardContent>
            {chartData.length > 0 ? (
@@ -159,8 +236,8 @@ export default function AdminAnalyticsPage() {
             </ChartContainer>
           ) : (
              <div className="text-center py-16 text-muted-foreground">
-              <p>No sales data available to display analytics.</p>
-              <p className="text-sm">Ticket sales will appear here once they happen.</p>
+              <p>No sales data available for the selected period.</p>
+              <p className="text-sm">Try selecting a different date range.</p>
             </div>
           )}
         </CardContent>
@@ -169,7 +246,7 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Event-wise Sales Analytics</CardTitle>
-          <CardDescription>A breakdown of ticket sales and revenue for each event.</CardDescription>
+          <CardDescription>A breakdown of sales and revenue for each event in the selected period.</CardDescription>
         </CardHeader>
         <CardContent>
           {eventSalesData.length > 0 ? (
@@ -193,7 +270,7 @@ export default function AdminAnalyticsPage() {
             </Table>
           ) : (
              <div className="text-center py-16 text-muted-foreground">
-              <p>No sales data available to display analytics.</p>
+              <p>No event sales in the selected period.</p>
               <p className="text-sm">Create events and sell tickets to see data here.</p>
             </div>
           )}
