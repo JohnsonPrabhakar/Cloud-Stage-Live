@@ -31,16 +31,16 @@ import {
 
 // Helper to convert Firestore timestamps to Dates in nested objects
 const convertTimestamps = (data: any) => {
-    if (data?.date instanceof Timestamp) {
-        data.date = data.date.toDate();
+    if (!data) return data;
+    const new_data = { ...data };
+    for (const key of Object.keys(new_data)) {
+        if (new_data[key] instanceof Timestamp) {
+            new_data[key] = new_data[key].toDate();
+        } else if (typeof new_data[key] === 'object' && new_data[key] !== null) {
+            new_data[key] = convertTimestamps(new_data[key]);
+        }
     }
-    if (data?.purchaseDate instanceof Timestamp) {
-        data.purchaseDate = data.purchaseDate.toDate();
-    }
-    if (data?.subscription?.expiryDate instanceof Timestamp) {
-        data.subscription.expiryDate = data.subscription.expiryDate.toDate();
-    }
-    return data;
+    return new_data;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -56,30 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const router = useRouter();
 
+  // Listen for public data always
   useEffect(() => {
-    // Firebase Auth state listener
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = convertTimestamps(userDocSnap.data() as User);
-          setUser(userData);
-          setRole(userData.role);
-        } else {
-            // This case might happen if a user is in auth but not in firestore. Log them out.
-            await signOut(auth);
-            setUser(null);
-            setRole(null);
-        }
-      } else {
-        setUser(null);
-        setRole(null);
-      }
-      setIsLoading(false);
-    });
-
-    // Firestore real-time listeners
     const unsubscribeEvents = onSnapshot(collection(db, "events"), (snapshot) => {
         const eventsData = snapshot.docs.map(doc => {
             const data = convertTimestamps(doc.data());
@@ -95,65 +73,113 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribeMovies = onSnapshot(collection(db, "movies"), (snapshot) => {
         setMovies(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie)));
     });
-
-    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-        setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
-    });
-
-    const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
-        setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ArtistApplication)));
-    });
     
-    const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
-        setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
-    });
-
-
     return () => {
-      unsubscribeAuth();
-      unsubscribeEvents();
-      unsubscribeMovies();
-      unsubscribeUsers();
-      unsubscribeApplications();
-      unsubscribeAllTickets();
+        unsubscribeEvents();
+        unsubscribeMovies();
     };
   }, []);
-  
-  // Update myTickets when the logged-in user or all tickets change
-  useEffect(() => {
-    if (user) {
-      const userTickets = allTickets.filter(ticket => ticket.userId === user.id);
-      setMyTickets(userTickets);
-    } else {
-      setMyTickets([]);
-    }
-  }, [user, allTickets]);
 
+  // Set up protected data listeners when user logs in
+  useEffect(() => {
+    let unsubscribers: (() => void)[] = [];
+
+    if (user) {
+        // Listener for the current user's tickets
+        const myTicketsQuery = query(collection(db, "tickets"), where("userId", "==", user.id));
+        const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
+            const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+            setMyTickets(userTickets);
+        });
+        unsubscribers.push(unsubscribeMyTickets);
+    }
+    
+    if (role === 'admin') {
+        // Listeners for admin-only data
+        const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+            setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
+        });
+        const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
+            setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
+        });
+        const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
+            setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
+        });
+        unsubscribers.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
+    }
+
+    return () => {
+        unsubscribers.forEach(unsub => unsub());
+    };
+  }, [user, role]);
+
+  // Firebase Auth state listener
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        
+        // Use onSnapshot to listen for real-time changes to the user document
+        const unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
+            if (userDocSnap.exists()) {
+                const userData = convertTimestamps(userDocSnap.data()) as User;
+                setUser(userData);
+                setRole(userData.role);
+            } else {
+                setUser(null);
+                setRole(null);
+            }
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error listening to user document:", error);
+            setUser(null);
+            setRole(null);
+            setIsLoading(false);
+        });
+        
+        return () => unsubscribeUserDoc();
+      } else {
+        setUser(null);
+        setRole(null);
+        setMyTickets([]);
+        setRegisteredUsers([]);
+        setArtistApplications([]);
+        setAllTickets([]);
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-        await signInWithEmailAndPassword(auth, email, pass);
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
         // onAuthStateChanged will handle setting user and role
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        if (!userDoc.exists()) {
+            toast({ title: 'Login Failed', description: "No user record found.", variant: 'destructive' });
+            await signOut(auth);
+            return false;
+        }
+        
+        const userData = userDoc.data() as User;
+        
         toast({ title: 'Login Successful', description: `Welcome back!` });
         
-        // Fetch user doc to decide redirection
-        const userDoc = await getDoc(doc(db, 'users', auth.currentUser!.uid));
-        if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
-            if (userData.role === 'admin') router.push('/admin');
-            else if (userData.role === 'artist') {
-                 if(userData.applicationStatus === 'approved'){
-                     router.push('/artist/dashboard');
-                 } else {
-                     const status = userData.applicationStatus === 'pending' ? 'is still pending review' : 'was rejected';
-                     toast({ title: 'Login Failed', description: `Your artist application ${status}.`, variant: 'destructive' });
-                     await signOut(auth);
-                     return false;
-                 }
-            }
-            else router.push('/user-dashboard');
+        if (userData.role === 'admin') router.push('/admin');
+        else if (userData.role === 'artist') {
+             if(userData.applicationStatus === 'approved'){
+                 router.push('/artist/dashboard');
+             } else {
+                 const status = userData.applicationStatus === 'pending' ? 'is still pending review' : 'was rejected';
+                 toast({ title: 'Login Failed', description: `Your artist application ${status}.`, variant: 'destructive' });
+                 await signOut(auth);
+                 return false;
+             }
         }
+        else router.push('/user-dashboard');
         return true;
     } catch (error: any) {
         toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
@@ -188,6 +214,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const artistRegister = async (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
     try {
+        // Check if email is already in use
+        const q = query(collection(db, "users"), where("email", "==", applicationData.email));
+        const querySnapshot = await getDoc(q.docs[0]?.ref);
+        if (querySnapshot.exists()) {
+            toast({ title: 'Application Failed', description: 'This email is already registered.', variant: 'destructive' });
+            return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, applicationData.email, applicationData.password!);
         const firebaseUser = userCredential.user;
 
@@ -233,6 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const newStatus = status === 'Approved' ? 'approved' : 'rejected';
         await updateDoc(userDocRef, { applicationStatus: newStatus });
+        toast({ title: `Application ${status}`});
       }
   };
 
@@ -274,7 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       artist: user.name,
       artistId: user.id,
       approvalStatus: 'Pending',
-      date: Timestamp.fromDate(eventData.date)
+      date: Timestamp.fromDate(eventData.date as Date)
     };
     
     await addDoc(collection(db, 'events'), newEvent);
@@ -316,10 +351,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     let usedSubscriptionCredit = false;
     if (user.subscription && user.subscription.eventCount > 0) {
-      await updateDoc(doc(db, 'users', user.id), {
-        'subscription.eventCount': user.subscription.eventCount - 1
-      });
-      usedSubscriptionCredit = true;
+      const event = events.find(e => e.id === eventId);
+      if (event && event.price > 0) {
+        await updateDoc(doc(db, 'users', user.id), {
+          'subscription.eventCount': user.subscription.eventCount - 1
+        });
+        usedSubscriptionCredit = true;
+      }
     }
 
     const newTicket = {
@@ -336,7 +374,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setIsLoading(true);
     await signOut(auth);
-    // onAuthStateChanged will clear user and role
+    // onAuthStateChanged will clear user and role, and data listeners
     router.push('/');
     setIsLoading(false);
   };
