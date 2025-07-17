@@ -86,15 +86,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
       
+      // This array will hold cleanup functions for our Firestore listeners
       let protectedListeners: (() => void)[] = [];
+      
+      // Clean up any existing listeners before setting new ones
+      protectedListeners.forEach(unsub => unsub());
+      protectedListeners = [];
 
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
         const unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
-            // Clean up old listeners before setting new ones
-            protectedListeners.forEach(unsub => unsub());
-            protectedListeners = [];
 
             if (userDocSnap.exists()) {
                 const userData = convertTimestamps(userDocSnap.data()) as User;
@@ -148,14 +150,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
 
-      // Cleanup function for the auth listener
+      // Cleanup function for the auth listener itself
       return () => {
-        protectedListeners.forEach(unsub => unsub());
+        unsubscribeAuth(); // Unsubscribe from auth changes
+        protectedListeners.forEach(unsub => unsub()); // Unsubscribe from all Firestore listeners
       }
     });
 
-    // Cleanup function for the useEffect hook
-    return () => unsubscribeAuth();
+    // We don't return from useEffect here because the cleanup is handled inside the onAuthStateChanged callback
   }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
