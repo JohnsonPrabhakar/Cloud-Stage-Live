@@ -1,3 +1,4 @@
+
 import type {User, Role, ArtistApplication, Event, Movie, Ticket} from '@/lib/types';
 import {createContext} from 'react';
 
@@ -20,6 +21,7 @@ interface AuthContextType {
     status: 'Approved' | 'Rejected',
     reason?: string
   ) => void;
+  uploadImage: (file: File, path: string) => Promise<string | null>;
   updateUserProfile: (updatedUser: Partial<User>) => void;
   subscribeUser: () => void;
   createEvent: (eventData: Omit<Event, 'id' | 'artist' | 'artistId' | 'status' | 'approvalStatus'>) => void;

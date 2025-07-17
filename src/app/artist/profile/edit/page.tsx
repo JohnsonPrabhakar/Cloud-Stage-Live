@@ -9,14 +9,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import type React from "react";
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 export default function EditArtistProfilePage() {
-    const { user, updateUserProfile } = useAuth();
+    const { user, updateUserProfile, uploadImage } = useAuth();
     
     const [name, setName] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [newImageSelected, setNewImageSelected] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -29,9 +30,9 @@ export default function EditArtistProfilePage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setImageFile(file);
             const tempUrl = URL.createObjectURL(file);
             setImagePreview(tempUrl);
-            setNewImageSelected(true);
         }
     };
     
@@ -39,18 +40,23 @@ export default function EditArtistProfilePage() {
         fileInputRef.current?.click();
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) return;
+        setIsUploading(true);
         
         const profileUpdate: { name: string, profilePictureUrl?: string } = { name };
         
-        if (newImageSelected && user) {
-            // Simulate a new image upload by generating a new unique avatar URL
-            profileUpdate.profilePictureUrl = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.email}-${Date.now()}`;
+        if (imageFile) {
+            const imageUrl = await uploadImage(imageFile, `artists/${user.id}/profile.jpg`);
+            if (imageUrl) {
+                profileUpdate.profilePictureUrl = imageUrl;
+            }
         }
 
-        updateUserProfile(profileUpdate);
-        setNewImageSelected(false); 
+        await updateUserProfile(profileUpdate);
+        setImageFile(null); 
+        setIsUploading(false);
     };
 
     const getInitials = (nameStr: string) => nameStr ? nameStr.split(' ').map(n => n[0]).join('').toUpperCase() : '';
@@ -110,7 +116,10 @@ export default function EditArtistProfilePage() {
                     </div>
 
                      <div className="flex justify-end">
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit" disabled={isUploading}>
+                            {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                        </Button>
                     </div>
                 </form>
             </CardContent>

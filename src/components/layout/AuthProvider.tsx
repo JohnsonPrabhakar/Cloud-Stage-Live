@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getEventStatus } from '@/lib/utils';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { 
   onAuthStateChanged, 
   createUserWithEmailAndPassword, 
@@ -28,6 +28,7 @@ import {
   deleteDoc,
   Timestamp
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Helper to convert Firestore timestamps to Dates in nested objects
 const convertTimestamps = (data: any) => {
@@ -270,6 +271,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
+  const uploadImage = async (file: File, path: string): Promise<string | null> => {
+    try {
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error: any) {
+      toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
+      return null;
+    }
+  };
+
   const updateUserProfile = async (updatedData: Partial<User>) => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.id);
@@ -388,6 +401,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     registeredUsers,
     artistApplications,
     updateApplicationStatus,
+    uploadImage,
     updateUserProfile,
     subscribeUser,
     events,
@@ -403,5 +417,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
