@@ -98,19 +98,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
         const userDocRef = doc(db, 'users', firebaseUser.uid);
 
+        // --- My Tickets Listener (for ALL logged-in users, established once) ---
+        const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', firebaseUser.uid));
+        const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
+            const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+            setMyTickets(userTickets);
+        }, (error) => {
+            console.error("Error fetching user tickets: ", error);
+        });
+        allListeners.push(unsubscribeMyTickets);
+
         // --- User Document Listener ---
         const unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const userData = convertTimestamps(docSnap.data()) as User;
             const newRole = userData.role;
 
-            // Set user and role state only if they have changed
-            setUser(prevUser => JSON.stringify(prevUser) !== JSON.stringify(userData) ? userData : prevUser);
-            setRole(prevRole => prevRole !== newRole ? newRole : prevRole);
+            // Set user and role state
+            setUser(userData);
+            setRole(newRole);
 
             // Clean up previous role-specific listeners before setting new ones
-            allListeners.filter(unsub => unsub !== unsubscribeUserDoc).forEach(unsub => unsub());
-            allListeners = [unsubscribeUserDoc]; // Reset listeners array
+            allListeners.filter(unsub => unsub !== unsubscribeUserDoc && unsub !== unsubscribeMyTickets).forEach(unsub => unsub());
+            allListeners = [unsubscribeUserDoc, unsubscribeMyTickets]; // Reset listeners array
 
             // --- Role-Specific Listeners ---
             if (newRole === 'admin') {
@@ -135,16 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsLoading(false);
         });
         
-        // --- My Tickets Listener (for ALL logged-in users, established once) ---
-        const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', firebaseUser.uid));
-        const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
-            const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-            setMyTickets(userTickets);
-        }, (error) => {
-            console.error("Error fetching user tickets: ", error);
-        });
-
-        allListeners.push(unsubscribeUserDoc, unsubscribeMyTickets);
+        allListeners.push(unsubscribeUserDoc);
 
       } else {
         // User is logged out, clear all state and call all active cleanup functions
@@ -449,5 +450,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
