@@ -10,39 +10,46 @@ import { getEventStatus } from '@/lib/utils';
 import { auth, db, storage } from '@/lib/firebase';
 import { 
   onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  signOut
+  createUserWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { 
-  doc, 
-  setDoc, 
-  getDoc, 
+  collection, 
   onSnapshot, 
-  collection,
+  doc,
   query,
   where,
-  updateDoc,
+  getDoc,
+  setDoc,
   addDoc,
+  updateDoc,
   serverTimestamp,
   deleteDoc,
-  Timestamp
+  Timestamp,
+  getDocs,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Helper to convert Firestore timestamps to Dates in nested objects
-const convertTimestamps = (data: any) => {
+const convertTimestamps = (data: any): any => {
     if (!data) return data;
-    const new_data = { ...data };
-    for (const key of Object.keys(new_data)) {
-        if (new_data[key] instanceof Timestamp) {
-            new_data[key] = new_data[key].toDate();
-        } else if (typeof new_data[key] === 'object' && new_data[key] !== null && !Array.isArray(new_data[key])) {
-            new_data[key] = convertTimestamps(new_data[key]);
-        }
+    if (data instanceof Timestamp) {
+        return data.toDate();
     }
-    return new_data;
+    if (Array.isArray(data)) {
+        return data.map(item => convertTimestamps(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+        const new_data: {[key: string]: any} = {};
+        for (const key of Object.keys(data)) {
+            new_data[key] = convertTimestamps(data[key]);
+        }
+        return new_data;
+    }
+    return data;
 }
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -97,26 +104,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const userData = convertTimestamps(docSnap.data()) as User;
-            setUser(userData);
             const newRole = userData.role;
-            setRole(newRole); // Set role here
 
-            // Clean up old role-specific listeners before setting new ones
-            // This part is crucial for role changes, though less common.
-            activeListeners = activeListeners.filter(l => l !== unsubscribeUser); // Keep the user listener
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [unsubscribeUser]; // Reset with just the user listener
-
-            // --- Set up role-specific listeners based on the new role ---
-            if (newRole === 'admin') {
-              const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User))));
-              const unsubApps = onSnapshot(collection(db, "artistApplications"), (snapshot) => setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication))));
-              const unsubAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket))));
-              activeListeners.push(unsubUsers, unsubApps, unsubAllTickets);
-            } else if (newRole === 'artist') {
-              const unsubAllTickets = onSnapshot(collection(db, 'tickets'), (snapshot) => setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket))));
-              activeListeners.push(unsubAllTickets);
+            // This comparison is crucial to prevent re-subscribing on every minor profile update
+            if (role !== newRole) {
+                // Role has changed, clean up old role-specific listeners
+                 activeListeners.forEach(unsub => {
+                    // Don't kill the main user listener
+                    if (unsub !== unsubscribeUser) unsub();
+                });
+                // Reset active listeners, keeping the main user one
+                activeListeners = [unsubscribeUser];
+                
+                // --- Set up new role-specific listeners ---
+                if (newRole === 'admin') {
+                  const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User))));
+                  const unsubApps = onSnapshot(collection(db, "artistApplications"), (snapshot) => setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication))));
+                  const unsubAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket))));
+                  activeListeners.push(unsubUsers, unsubApps, unsubAllTickets);
+                } else if (newRole === 'artist') {
+                   const q = query(collection(db, 'tickets'));
+                   const unsubAllTickets = onSnapshot(q, (snapshot) => {
+                     setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
+                   });
+                   activeListeners.push(unsubAllTickets);
+                }
             }
+            
+            setUser(userData);
+            setRole(newRole);
 
           } else {
             signOut(auth);
@@ -155,7 +171,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribeAuth();
       activeListeners.forEach(unsub => unsub());
     };
-  }, []);
+  // We pass `role` here to re-evaluate listeners if the role changes.
+  }, [role]);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     setIsLoading(true);
@@ -297,9 +314,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUserProfile = async (updatedData: Partial<User>) => {
     if (!user) return;
-    const userDocRef = doc(db, 'users', user.id);
-    await updateDoc(userDocRef, updatedData);
-    toast({ title: "Profile Updated", description: "Your changes have been saved." });
+    try {
+        const userDocRef = doc(db, 'users', user.id);
+        await updateDoc(userDocRef, updatedData);
+        toast({ title: "Profile Updated", description: "Your changes have been saved." });
+    } catch (error: any) {
+        toast({ title: "Update Failed", description: error.message, variant: "destructive" });
+    }
   };
   
   const subscribeUser = async () => {
@@ -368,15 +389,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
+    // Check against current `myTickets` state to prevent duplicates
     if (myTickets.some(t => t.eventId === eventId)) {
       toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
       return;
     }
     
     let usedSubscriptionCredit = false;
+    // Check if user has an active subscription with credits
     if (user.subscription && user.subscription.eventCount > 0) {
       const event = events.find(e => e.id === eventId);
-      if (event && event.price > 0) {
+      if (event && event.price > 0) { // Only use credit for paid events
         await updateDoc(doc(db, 'users', user.id), {
           'subscription.eventCount': user.subscription.eventCount - 1
         });
@@ -429,5 +452,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
