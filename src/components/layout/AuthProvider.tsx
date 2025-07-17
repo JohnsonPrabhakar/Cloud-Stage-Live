@@ -42,7 +42,7 @@ const convertTimestamps = (data: any): any => {
     if (!data) return data;
     if (data instanceof Timestamp) return data.toDate();
     if (Array.isArray(data)) return data.map(convertTimestamps);
-    if (typeof data === 'object') {
+    if (typeof data === 'object' && data !== null) {
         const newData: { [key: string]: any } = {};
         for (const key in data) {
             newData[key] = convertTimestamps(data[key]);
@@ -474,3 +474,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+    
