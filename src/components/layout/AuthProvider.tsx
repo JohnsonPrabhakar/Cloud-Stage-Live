@@ -98,30 +98,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (docSnap.exists()) {
             const userData = convertTimestamps(docSnap.data()) as User;
             setUser(userData);
-          } else {
-            signOut(auth);
-          }
-        }, (error) => {
-          console.error("Error in user snapshot listener:", error);
-          signOut(auth);
-        });
-        activeListeners.push(unsubscribeUser);
-        
-        // --- User's Tickets Listener (for all roles) ---
-        const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', firebaseUser.uid));
-        const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
-            const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-            setMyTickets(userTickets);
-        });
-        activeListeners.push(unsubscribeMyTickets);
-        
-        // --- Get role and set up role-specific listeners ---
-        getDoc(userDocRef).then(docSnap => {
-          if (docSnap.exists()) {
-            const userData = convertTimestamps(docSnap.data()) as User;
             const newRole = userData.role;
-            setRole(newRole);
+            setRole(newRole); // Set role here
 
+            // Clean up old role-specific listeners before setting new ones
+            // This part is crucial for role changes, though less common.
+            activeListeners = activeListeners.filter(l => l !== unsubscribeUser); // Keep the user listener
+            activeListeners.forEach(unsub => unsub());
+            activeListeners = [unsubscribeUser]; // Reset with just the user listener
+
+            // --- Set up role-specific listeners based on the new role ---
             if (newRole === 'admin') {
               const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User))));
               const unsubApps = onSnapshot(collection(db, "artistApplications"), (snapshot) => setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication))));
@@ -131,13 +117,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const unsubAllTickets = onSnapshot(collection(db, 'tickets'), (snapshot) => setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket))));
               activeListeners.push(unsubAllTickets);
             }
+
+          } else {
+            signOut(auth);
           }
           setIsLoading(false);
-        }).catch(err => {
-            console.error("Error fetching user role:", err);
-            signOut(auth);
-            setIsLoading(false);
+        }, (error) => {
+          console.error("Error in user snapshot listener:", error);
+          signOut(auth);
+          setIsLoading(false);
         });
+        activeListeners.push(unsubscribeUser);
+        
+        // --- User's Tickets Listener (for all roles) ---
+        const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', firebaseUser.uid));
+        const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
+            const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+            setMyTickets(userTickets);
+        }, (error) => {
+             console.error("Error fetching user tickets: ", error);
+        });
+        activeListeners.push(unsubscribeMyTickets);
   
       } else {
         // User is logged out, clear all user-specific state
@@ -429,3 +429,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+    
