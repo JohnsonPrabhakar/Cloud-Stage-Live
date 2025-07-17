@@ -398,10 +398,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
-    // Check against current `myTickets` state to prevent duplicates
     if (myTickets.some(t => t.eventId === eventId)) {
-      toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
-      return;
+        toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
+        return;
     }
 
     const eventDetails = events.find(e => e.id === eventId);
@@ -409,35 +408,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
         return;
     }
-
-    const newTicket = {
-      userId: user.id,
-      eventId: eventId,
-      artistId: eventDetails.artistId || null,
-      purchaseDate: serverTimestamp(),
+    
+    const mockTicket: Ticket = {
+        id: `mock_${Date.now()}`,
+        userId: user.id,
+        eventId: eventId,
+        artistId: eventDetails.artistId || null,
+        purchaseDate: new Date(),
     };
 
-    try {
-        await addDoc(collection(db, 'tickets'), newTicket);
-        
-        // Simulate subscription credit usage if applicable
-        if (user.subscription && user.subscription.eventCount > 0 && eventDetails.price > 0) {
-            const updatedUser = {
-            ...user,
-            subscription: {
-                ...user.subscription,
-                eventCount: user.subscription.eventCount - 1,
-            }
-            };
-            setUser(updatedUser); // Update local user state
-            await updateDoc(doc(db, 'users', user.id), { subscription: updatedUser.subscription });
-        }
-        
-        toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
 
-    } catch (error: any) {
-        toast({ title: "Purchase Failed", description: error.message, variant: "destructive" });
-    }
+    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
   }
 
   const logout = async () => {
@@ -474,5 +456,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    
