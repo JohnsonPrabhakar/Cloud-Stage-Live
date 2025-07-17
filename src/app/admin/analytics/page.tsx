@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DollarSign, Ticket, User, Users } from 'lucide-react';
 import {
   ChartContainer,
@@ -12,6 +12,7 @@ import {
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { useAuth } from '@/hooks/use-auth';
 import { useMemo } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const chartConfig = {
   revenue: {
@@ -73,11 +74,26 @@ export default function AdminAnalyticsPage() {
 
   }, [allTickets, events]);
 
+  const eventSalesData = useMemo(() => {
+    if (!events || !allTickets) return [];
+
+    return events.map(event => {
+      const ticketsSold = allTickets.filter(ticket => ticket.eventId === event.id).length;
+      const revenue = ticketsSold * event.price;
+      return {
+        id: event.id,
+        title: event.title,
+        ticketsSold,
+        revenue,
+      };
+    }).sort((a, b) => b.revenue - a.revenue); // Sort by revenue descending
+  }, [events, allTickets]);
+
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold font-headline mb-6">Platform Analytics</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold font-headline">Platform Analytics</h1>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -145,6 +161,40 @@ export default function AdminAnalyticsPage() {
              <div className="text-center py-16 text-muted-foreground">
               <p>No sales data available to display analytics.</p>
               <p className="text-sm">Ticket sales will appear here once they happen.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Event-wise Sales Analytics</CardTitle>
+          <CardDescription>A breakdown of ticket sales and revenue for each event.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {eventSalesData.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event Title</TableHead>
+                  <TableHead className="text-right">Tickets Sold</TableHead>
+                  <TableHead className="text-right">Total Revenue</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventSalesData.map(event => (
+                  <TableRow key={event.id}>
+                    <TableCell className="font-medium">{event.title}</TableCell>
+                    <TableCell className="text-right">{event.ticketsSold.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">Rs. {event.revenue.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+             <div className="text-center py-16 text-muted-foreground">
+              <p>No sales data available to display analytics.</p>
+              <p className="text-sm">Create events and sell tickets to see data here.</p>
             </div>
           )}
         </CardContent>
