@@ -1,54 +1,57 @@
 
 'use client';
 
-import React, { useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useRef } from 'react';
 import type { User, Role, ArtistApplication, Event, Movie, Ticket } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { AuthContext } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { getEventStatus } from '@/lib/utils';
-import { auth, db, storage } from '@/lib/firebase';
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  type User as FirebaseUser,
 } from "firebase/auth";
+import type { User as FirebaseUser } from "firebase/auth";
 import { 
   collection, 
-  onSnapshot, 
-  doc,
+  doc, 
+  getDoc, 
+  setDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc,
+  onSnapshot,
   query,
   where,
-  getDoc,
-  setDoc,
-  addDoc,
-  updateDoc,
-  serverTimestamp,
-  deleteDoc,
   Timestamp,
-  getDocs,
+  serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { 
+    getStorage, 
+    ref, 
+    uploadBytes, 
+    getDownloadURL 
+} from "firebase/storage";
+import { db, auth, storage } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { getEventStatus } from '@/lib/utils';
+import { AuthContext } from '@/contexts/AuthContext';
+
 
 // Helper to convert Firestore timestamps to Dates in nested objects
 const convertTimestamps = (data: any): any => {
     if (!data) return data;
-    if (data instanceof Timestamp) {
-        return data.toDate();
-    }
-    if (Array.isArray(data)) {
-        return data.map(item => convertTimestamps(item));
-    }
-    if (typeof data === 'object' && data !== null) {
-        const new_data: {[key: string]: any} = {};
-        for (const key of Object.keys(data)) {
-            new_data[key] = convertTimestamps(data[key]);
+    const new_data = Array.isArray(data) ? [] : {};
+    for (const key in data) {
+        const value = data[key];
+        if (value instanceof Timestamp) {
+            new_data[key] = value.toDate();
+        } else if (typeof value === 'object' && value !== null) {
+            new_data[key] = convertTimestamps(value);
+        } else {
+            new_data[key] = value;
         }
-        return new_data;
     }
-    return data;
+    return new_data;
 }
 
 
@@ -100,8 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       roleSpecificListeners = [];
 
       if (firebaseUser) {
-        setIsLoading(true);
-        
         // Clean up any existing myTickets listener before setting a new one
         if (myTicketsUnsubRef.current) {
           myTicketsUnsubRef.current();
@@ -143,16 +144,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
                 roleSpecificListeners.push(unsubAllTickets);
             }
+             setIsLoading(false);
           } else {
-            signOut(auth);
+             // If user exists in Auth but not in Firestore, sign them out.
+            console.error("User document not found for authenticated user:", firebaseUser.uid);
+            signOut(auth); 
           }
-          setIsLoading(false);
         }, (error) => {
           console.error("Error in user snapshot listener:", error);
           signOut(auth);
           setIsLoading(false);
         });
         
+        roleSpecificListeners.push(unsubscribeUserDoc);
+
       } else {
         // User is logged out, clear all state and call all active cleanup functions
         setUser(null);
@@ -461,3 +466,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+    
