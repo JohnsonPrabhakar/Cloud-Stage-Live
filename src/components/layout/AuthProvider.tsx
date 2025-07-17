@@ -80,43 +80,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Set up protected data listeners when user logs in
-  useEffect(() => {
-    let unsubscribers: (() => void)[] = [];
-
-    if (user && role) {
-      // Listener for the current user's tickets
-      const myTicketsQuery = query(collection(db, "tickets"), where("userId", "==", user.id));
-      const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
-          const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-          setMyTickets(userTickets);
-      });
-      unsubscribers.push(unsubscribeMyTickets);
-    
-      if (role === 'admin') {
-          // Listeners for admin-only data
-          const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-              setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
-          });
-          const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
-              setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
-          });
-          const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
-              const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-              setAllTickets(allTicketsData);
-          });
-          unsubscribers.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
-      }
-    }
-
-    return () => {
-        unsubscribers.forEach(unsub => unsub());
-    };
-  }, [user, role]);
-
   // Firebase Auth state listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      let protectedListeners: (() => void)[] = [];
+
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
@@ -125,20 +93,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const userData = convertTimestamps(userDocSnap.data()) as User;
                 setUser(userData);
                 setRole(userData.role);
+
+                // Clear previous listeners before setting new ones
+                protectedListeners.forEach(unsub => unsub());
+                protectedListeners = [];
+
+                // Listener for the current user's tickets (all roles)
+                const myTicketsQuery = query(collection(db, "tickets"), where("userId", "==", firebaseUser.uid));
+                const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
+                    const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+                    setMyTickets(userTickets);
+                });
+                protectedListeners.push(unsubscribeMyTickets);
+            
+                // Listeners for admin-only data
+                if (userData.role === 'admin') {
+                    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+                        setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
+                    });
+                    const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
+                        setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
+                    });
+                    const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
+                        const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
+                        setAllTickets(allTicketsData);
+                    });
+                    protectedListeners.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
+                }
+
             } else {
                 signOut(auth);
-                setUser(null);
-                setRole(null);
             }
             setIsLoading(false);
         }, (error) => {
             console.error("Error listening to user document:", error);
-            setUser(null);
-            setRole(null);
-            setIsLoading(false);
+            signOut(auth);
         });
+
+        protectedListeners.push(unsubscribeUserDoc);
         
-        return () => unsubscribeUserDoc();
       } else {
         setUser(null);
         setRole(null);
@@ -147,6 +140,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setArtistApplications([]);
         setAllTickets([]);
         setIsLoading(false);
+      }
+
+      return () => {
+        protectedListeners.forEach(unsub => unsub());
       }
     });
 
@@ -194,7 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const firebaseUser = userCredential.user;
         
-        const userRole: Role = email === 'admin@cloudstage.live' ? 'admin' : 'user';
+        const userRole: Role = email.toLowerCase() === 'admin@cloudstage.live' ? 'admin' : 'user';
 
         const newUser: User = { 
             id: firebaseUser.uid, 
