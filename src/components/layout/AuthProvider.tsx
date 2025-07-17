@@ -409,6 +409,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     
+    // Mock purchase logic for testing
     const mockTicket: Ticket = {
         id: `mock_${Date.now()}`,
         userId: user.id,
