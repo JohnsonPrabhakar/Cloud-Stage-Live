@@ -173,11 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         const userData = userDoc.data() as User;
         
-        toast({ title: 'Login Successful', description: `Welcome back!` });
-        
-        if (userData.role === 'admin') {
-            router.push('/admin');
-        } else if (userData.role === 'artist') {
+        if (userData.role === 'artist') {
              if(userData.applicationStatus === 'approved'){
                  router.push('/artist/dashboard');
              } else {
@@ -186,9 +182,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                  await signOut(auth);
                  return false;
              }
+        } else if (userData.role === 'admin') {
+            router.push('/admin');
         } else {
             router.push('/user-dashboard');
         }
+        
+        toast({ title: 'Login Successful', description: `Welcome back!` });
         return true;
     } catch (error: any) {
         toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
@@ -257,26 +257,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateApplicationStatus = async (applicationId: string, status: 'Approved' | 'Rejected', reason?: string) => {
-      const appDocRef = doc(db, 'artistApplications', applicationId);
-      const appDoc = await getDoc(appDocRef);
+      try {
+        const appDocRef = doc(db, 'artistApplications', applicationId);
+        const appDoc = await getDoc(appDocRef);
 
-      if (appDoc.exists()) {
-        const appData = appDoc.data() as ArtistApplication;
-        if (!appData.userId) {
-            toast({ title: 'Error', description: 'Application is missing a user ID.', variant: 'destructive' });
-            return;
-        }
-        const userDocRef = doc(db, 'users', appData.userId);
-        
-        const updatedAppData: any = { status };
-        if (status === 'Rejected' && reason) {
-            updatedAppData.rejectionReason = reason;
-        }
-        await updateDoc(appDocRef, updatedAppData);
+        if (appDoc.exists()) {
+            const appData = appDoc.data() as ArtistApplication;
+            if (!appData.userId) {
+                toast({ title: 'Error', description: 'Application is missing a user ID.', variant: 'destructive' });
+                return;
+            }
+            const userDocRef = doc(db, 'users', appData.userId);
+            
+            // Prepare updates for both documents
+            const updatedAppData: any = { status };
+            if (status === 'Rejected' && reason) {
+                updatedAppData.rejectionReason = reason;
+            }
+            
+            const newStatusForUserDoc = status === 'Approved' ? 'approved' : 'rejected';
 
-        const newStatus = status === 'Approved' ? 'approved' : 'rejected';
-        await updateDoc(userDocRef, { applicationStatus: newStatus });
-        toast({ title: `Application ${status}`});
+            // Perform both updates
+            await updateDoc(appDocRef, updatedAppData);
+            await updateDoc(userDocRef, { applicationStatus: newStatusForUserDoc });
+            
+            toast({ title: `Application ${status}`});
+        }
+      } catch (error: any) {
+        toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
       }
   };
 
