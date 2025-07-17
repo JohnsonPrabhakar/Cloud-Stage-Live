@@ -409,18 +409,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     
-    // Mock purchase logic for testing
-    const mockTicket: Ticket = {
-        id: `mock_${Date.now()}`,
-        userId: user.id,
-        eventId: eventId,
-        artistId: eventDetails.artistId || null,
-        purchaseDate: new Date(),
-    };
+    try {
+        await addDoc(collection(db, 'tickets'), {
+            userId: user.id,
+            eventId: eventId,
+            artistId: eventDetails.artistId || null,
+            purchaseDate: serverTimestamp(),
+        });
 
-    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
-
-    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+        toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    } catch(error: any) {
+        toast({ title: "Purchase Failed", description: "Could not save ticket to database.", variant: "destructive" });
+        console.error("Error purchasing ticket:", error);
+    }
   }
 
   const logout = async () => {
@@ -457,3 +458,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
