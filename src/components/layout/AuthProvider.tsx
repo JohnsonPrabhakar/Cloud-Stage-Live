@@ -36,7 +36,7 @@ const convertTimestamps = (data: any) => {
     for (const key of Object.keys(new_data)) {
         if (new_data[key] instanceof Timestamp) {
             new_data[key] = new_data[key].toDate();
-        } else if (typeof new_data[key] === 'object' && new_data[key] !== null) {
+        } else if (typeof new_data[key] === 'object' && new_data[key] !== null && !Array.isArray(new_data[key])) {
             new_data[key] = convertTimestamps(new_data[key]);
         }
     }
@@ -53,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const router = useRouter();
 
   // Listen for public data always
@@ -102,11 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
               const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-              // This is a workaround to make allTickets available for admin analytics.
-              // A better approach for larger apps might be a separate context or hook for admin data.
-              // For now, we update a piece of state that's only used by the admin.
-              setRegisteredUsers(prev => [...prev]); // This is a bit of a hack to trigger re-render in analytics page.
-                                                     // A better solution would be to have a dedicated `allTickets` state. Let's add it.
+              setAllTickets(allTicketsData);
           });
           unsubscribers.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
       }
@@ -129,6 +126,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(userData);
                 setRole(userData.role);
             } else {
+                // This case can happen if a user is in Auth but not in Firestore.
+                // Log them out to prevent inconsistent state.
+                signOut(auth);
                 setUser(null);
                 setRole(null);
             }
@@ -147,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMyTickets([]);
         setRegisteredUsers([]);
         setArtistApplications([]);
+        setAllTickets([]);
         setIsLoading(false);
       }
     });
@@ -229,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             role: 'artist',
             applicationStatus: 'pending',
             profilePictureUrl: applicationData.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
+            phoneNumber: applicationData.contactNumber,
         };
         await setDoc(doc(db, 'users', firebaseUser.uid), newArtistUser);
 
@@ -254,7 +256,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (appDoc.exists()) {
         const appData = appDoc.data() as ArtistApplication;
-        const userDocRef = doc(db, 'users', appData.userId!);
+        if (!appData.userId) {
+            toast({ title: 'Error', description: 'Application is missing a user ID.', variant: 'destructive' });
+            return;
+        }
+        const userDocRef = doc(db, 'users', appData.userId);
         
         const updatedAppData: any = { status };
         if (status === 'Rejected' && reason) {
@@ -396,7 +402,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     deleteMovie,
     myTickets,
     purchaseTicket,
-    allTickets: [], // This can be derived or fetched separately for admin if needed
+    allTickets,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
