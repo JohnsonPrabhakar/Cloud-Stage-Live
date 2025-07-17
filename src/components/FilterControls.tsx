@@ -39,9 +39,17 @@ export function FilterControls<T extends { id: string }>({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [category, setCategory] = useState(searchParams.get('category') || 'all');
-  const [language, setLanguage] = useState(searchParams.get('language') || 'all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('all');
+  const [language, setLanguage] = useState('all');
+
+  // Set initial state from URL query params on mount
+  useEffect(() => {
+    setSearchTerm(searchParams.get('search') || '');
+    setCategory(searchParams.get('category') || 'all');
+    setLanguage(searchParams.get('language') || 'all');
+  }, [searchParams]);
+
 
   const updateURL = useCallback(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,7 +68,8 @@ export function FilterControls<T extends { id: string }>({
     } else {
       params.delete('language');
     }
-    router.push(`${pathname}?${params.toString()}`);
+    // Use replace to avoid polluting browser history on every keystroke/filter change
+    router.replace(`${pathname}?${params.toString()}`);
   }, [searchTerm, category, language, router, pathname]);
 
   useEffect(() => {
@@ -71,24 +80,25 @@ export function FilterControls<T extends { id: string }>({
     return () => {
       clearTimeout(handler);
     };
-  }, [searchTerm, updateURL]);
+  }, [searchTerm, category, language, updateURL]);
 
-  useEffect(() => {
-    updateURL();
-  }, [category, language, updateURL]);
 
   const filteredItems = useMemo(() => {
+    const currentSearch = searchParams.get('search') || '';
+    const currentCategory = searchParams.get('category') || 'all';
+    const currentLanguage = searchParams.get('language') || 'all';
+
     return items.filter((item: T) => {
       const searchMatch = searchKeys.some(key => {
         const value = item[key];
-        return typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase());
+        return typeof value === 'string' && value.toLowerCase().includes(currentSearch.toLowerCase());
       });
-      const categoryMatch = category === 'all' || (item[categoryKey] as string)?.toLowerCase() === category.toLowerCase();
-      const languageMatch = language === 'all' || (item[languageKey] as string)?.toLowerCase() === language.toLowerCase();
+      const categoryMatch = currentCategory === 'all' || (item[categoryKey] as string)?.toLowerCase() === currentCategory.toLowerCase();
+      const languageMatch = currentLanguage === 'all' || (item[languageKey] as string)?.toLowerCase() === currentLanguage.toLowerCase();
 
       return searchMatch && categoryMatch && languageMatch;
     });
-  }, [items, searchTerm, category, language, searchKeys, categoryKey, languageKey]);
+  }, [items, searchParams, searchKeys, categoryKey, languageKey]);
 
   return (
     <>

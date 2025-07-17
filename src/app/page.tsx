@@ -17,6 +17,7 @@ import React from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
+import { HomepageFilter } from '@/components/HomepageFilter';
 
 const heroImages = [
   { src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bXVzaWMlMjBjb25jZXJ0fGVufDB8fHx8MTc1MjY2MTIyOHww&ixlib=rb-4.1.0&q=80&w=1080', alt: 'Live music concert', hint: 'music concert' },
@@ -40,6 +41,9 @@ export default function Home() {
   const upcomingEvents = approvedEvents.filter(e => e.status === 'Upcoming');
   const pastEvents = approvedEvents.filter(e => e.status === 'Past');
   const featuredMovies = movies.slice(0, 5);
+
+  const eventCategories = ['all', ...Array.from(new Set(events.map(e => e.category)))];
+  const eventLanguages = ['all', ...Array.from(new Set(events.map(e => e.language)))];
 
   return (
     <div className="flex flex-col items-center">
@@ -85,6 +89,7 @@ export default function Home() {
       </section>
 
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        <HomepageFilter categories={eventCategories} languages={eventLanguages} />
         <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
         <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
         <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
