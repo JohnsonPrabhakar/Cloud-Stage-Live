@@ -173,8 +173,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         toast({ title: 'Login Successful', description: `Welcome back!` });
         
-        if (userData.role === 'admin') router.push('/admin');
-        else if (userData.role === 'artist') {
+        if (userData.role === 'admin') {
+            router.push('/admin');
+        } else if (userData.role === 'artist') {
              if(userData.applicationStatus === 'approved'){
                  router.push('/artist/dashboard');
              } else {
@@ -183,8 +184,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                  await signOut(auth);
                  return false;
              }
+        } else {
+            router.push('/user-dashboard');
         }
-        else router.push('/user-dashboard');
         return true;
     } catch (error: any) {
         toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
@@ -207,7 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email, 
             phoneNumber, 
             role: userRole,
-            applicationStatus: 'none',
+            applicationStatus: userRole === 'admin' ? 'approved' : 'none',
             profilePictureUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${email}`
         };
         await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
