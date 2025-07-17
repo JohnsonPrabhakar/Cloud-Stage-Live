@@ -54,7 +54,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
-  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const router = useRouter();
 
   // Listen for public data always
@@ -84,8 +83,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Firebase Auth state listener
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      let protectedListeners: (() => void)[] = [];
       setIsLoading(true);
+      
+      // Stop all previous listeners
+      const protectedListeners: (() => void)[] = [];
 
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -95,10 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const userData = convertTimestamps(userDocSnap.data()) as User;
                 setUser(userData);
                 setRole(userData.role);
-
-                // Clear previous listeners before setting new ones
-                protectedListeners.forEach(unsub => unsub());
-                protectedListeners = [];
 
                 // Listener for the current user's tickets (all roles)
                 const myTicketsQuery = query(collection(db, "tickets"), where("userId", "==", firebaseUser.uid));
@@ -116,13 +113,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
                         setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
                     });
-                    const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
-                        const allTicketsData = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
-                        setAllTickets(allTicketsData);
-                    });
-                    protectedListeners.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
+                    protectedListeners.push(unsubscribeUsers, unsubscribeApplications);
                 }
-
             } else {
                 signOut(auth);
             }
@@ -141,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMyTickets([]);
         setRegisteredUsers([]);
         setArtistApplications([]);
-        setAllTickets([]);
         setIsLoading(false);
       }
 
@@ -412,7 +403,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     deleteMovie,
     myTickets,
     purchaseTicket,
-    allTickets,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
