@@ -55,6 +55,7 @@ const convertTimestamps = (data: any): any => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
-  const myTicketsUnsubRef = useRef<(() => void) | null>(null);
+  const myTicketsUnsubRef = useRef<() => void | null>(null);
 
   // Listen for public data always
   useEffect(() => {
@@ -380,6 +381,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     await addDoc(collection(db, 'movies'), movieData);
     toast({ title: 'Movie Added!', description: 'The new movie has been successfully added.' });
+    router.push('/admin/movies');
   };
   
   const deleteMovie = async (movieId: string) => {
@@ -411,17 +413,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
   
-    // MOCK IMPLEMENTATION: Add ticket to local state only
-    const mockTicket: Ticket = {
-      id: `mock-${new Date().getTime()}`, // A mock ID
+    const newTicket = {
       userId: user.id,
-      eventId: eventId,
+      eventId,
       artistId: eventDetails.artistId || null,
-      purchaseDate: new Date(), // Use a JS Date for mock
+      purchaseDate: serverTimestamp(),
     };
   
-    setMyTickets(prevTickets => [...prevTickets, mockTicket]);
-    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    try {
+      await addDoc(collection(db, 'tickets'), newTicket);
+      toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    } catch (error: any) {
+      toast({ title: "Purchase Failed", description: error.message, variant: "destructive" });
+    }
   }
 
   const logout = async () => {
