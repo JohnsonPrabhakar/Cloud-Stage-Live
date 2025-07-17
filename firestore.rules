@@ -1,40 +1,48 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can read/write their own profile and tickets
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      match /tickets/{ticketId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+    // Helper functions
+    function isAuth() {
+      return request.auth != null;
+    }
+    function isRole(role) {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
     }
 
-    // Artists can read/write their own profile
-    match /artists/{artistId} {
-      allow read, write: if request.auth != null && request.auth.uid == artistId;
-    }
-
-    // Events can be read by anyone, only written by the artist who created them
+    // Public Collections
     match /events/{eventId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == resource.data.createdBy;
+      allow write: if isRole('admin') || (isRole('artist') && request.resource.data.artistId == request.auth.uid);
     }
-    
-    // Movies can be read by anyone, but only written by an authenticated user (admin in app logic)
     match /movies/{movieId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isRole('admin');
     }
 
-    // Other collections are admin/app-logic controlled
-    match /artistApplications/{applicationId} {
-      allow read, write: if request.auth != null;
+    // Protected Collections
+    match /users/{userId} {
+      allow read: if isAuth();
+      // Allow user to update their own profile, and allow admin to update any user profile
+      allow update: if isOwner(userId) || isRole('admin');
+      allow create: if true; // Allow creation during signup for any user
+      allow delete: if isRole('admin');
+    }
+
+    match /artistApplications/{appId} {
+      allow read: if isRole('admin');
+      allow create: if true; // Open for anyone to apply
+      allow update, delete: if isRole('admin');
     }
 
     match /tickets/{ticketId} {
-       allow read, write: if request.auth != null;
+        allow read: if isOwner(request.resource.data.userId) || isRole('admin');
+        allow create: if isAuth();
     }
   }
 }

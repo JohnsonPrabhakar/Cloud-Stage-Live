@@ -86,10 +86,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
       
-      // This array will hold cleanup functions for our Firestore listeners
       let protectedListeners: (() => void)[] = [];
       
-      // Clean up any existing listeners before setting new ones
       protectedListeners.forEach(unsub => unsub());
       protectedListeners = [];
 
@@ -103,7 +101,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(userData);
                 setRole(userData.role);
 
-                // Listener for the current user's tickets (all roles)
                 const myTicketsQuery = query(collection(db, "tickets"), where("userId", "==", firebaseUser.uid));
                 const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
                     const userTickets = snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket));
@@ -111,7 +108,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
                 protectedListeners.push(unsubscribeMyTickets);
             
-                // Listeners for admin-only data
                 if (userData.role === 'admin') {
                     const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
                         setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
@@ -119,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
                         setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as ArtistApplication)));
                     });
-                    const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
+                     const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
                         setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
                     });
                     protectedListeners.push(unsubscribeUsers, unsubscribeApplications, unsubscribeAllTickets);
@@ -150,14 +146,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
 
-      // Cleanup function for the auth listener itself
       return () => {
-        unsubscribeAuth(); // Unsubscribe from auth changes
-        protectedListeners.forEach(unsub => unsub()); // Unsubscribe from all Firestore listeners
+        unsubscribeAuth();
+        protectedListeners.forEach(unsub => unsub());
       }
     });
-
-    // We don't return from useEffect here because the cleanup is handled inside the onAuthStateChanged callback
   }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
@@ -216,7 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
         toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });
-        await signOut(auth); // Log out user so they can log in themselves
+        await signOut(auth);
         return true;
     } catch (error: any) {
         toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
@@ -269,7 +262,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             const userDocRef = doc(db, 'users', appData.userId);
             
-            // Prepare updates for both documents
             const updatedAppData: any = { status };
             if (status === 'Rejected' && reason) {
                 updatedAppData.rejectionReason = reason;
@@ -277,9 +269,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             const newStatusForUserDoc = status === 'Approved' ? 'approved' : 'rejected';
 
-            // Perform both updates
-            await updateDoc(appDocRef, updatedAppData);
             await updateDoc(userDocRef, { applicationStatus: newStatusForUserDoc });
+            await updateDoc(appDocRef, updatedAppData);
             
             toast({ title: `Application ${status}`});
         }
