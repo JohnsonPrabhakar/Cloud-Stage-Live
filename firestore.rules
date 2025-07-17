@@ -1,0 +1,49 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // By default, block all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow users to read/write their own data
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+
+    // Anyone can read events and movies
+    match /events/{eventId} {
+      allow read: if true;
+      // Allow artists to create/update their own events
+      allow create, update: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'artist';
+    }
+
+    match /movies/{movieId} {
+      allow read: if true;
+    }
+    
+    // Allow logged-in users to create/read their own tickets
+    match /tickets/{ticketId} {
+        allow read, create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Allow anyone to submit an artist application
+    match /artistApplications/{applicationId} {
+        allow create: if true;
+        allow read: if request.auth != null; // Let admins read
+    }
+
+    // Admin access for specific collections (handled in-app logic, but rules can be a safeguard)
+    // For simplicity here, we allow authenticated users to perform actions that admins will do.
+    // In a production app, this would be locked down to a specific admin role check.
+     match /artistApplications/{applicationId} {
+        allow update: if request.auth != null;
+     }
+      match /movies/{movieId} {
+        allow create, update, delete: if request.auth != null;
+    }
+  }
+}
