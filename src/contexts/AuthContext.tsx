@@ -11,8 +11,8 @@ interface AuthContextType {
   movies: Movie[];
   myTickets: Ticket[];
   allTickets: Ticket[];
-  login: (email: string, pass: string) => boolean;
-  register: (name: string, email: string, pass: string, phoneNumber: string) => boolean;
+  login: (email: string, pass: string) => Promise<boolean>;
+  register: (name: string, email: string, pass: string, phoneNumber: string) => Promise<boolean>;
   artistRegister: (application: Omit<ArtistApplication, 'id' | 'status'>) => void;
   logout: () => void;
   updateApplicationStatus: (

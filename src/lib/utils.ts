@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { Event } from "./types";
+import { Timestamp } from "firebase/firestore";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -50,9 +51,9 @@ export function convertToEmbedUrl(url: string): string | null {
     return null;
 }
 
-export function getEventStatus(eventDate: Date, duration: number): Event['status'] {
+export function getEventStatus(eventDate: Date | Timestamp, duration: number): Event['status'] {
   const now = new Date();
-  const eventStartTime = new Date(eventDate);
+  const eventStartTime = eventDate instanceof Timestamp ? eventDate.toDate() : eventDate;
   const eventEndTime = new Date(eventStartTime.getTime() + duration * 60 * 1000);
 
   if (now < eventStartTime) {

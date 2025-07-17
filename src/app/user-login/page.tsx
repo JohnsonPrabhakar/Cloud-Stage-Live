@@ -17,25 +17,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import type { TabsProps } from '@radix-ui/react-tabs';
+import { Loader2 } from 'lucide-react';
 
 export default function UserLoginPage() {
   const { login, register } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(loginEmail, loginPassword);
+    setIsSubmitting(true);
+    await login(loginEmail, loginPassword);
+    setIsSubmitting(false);
   };
   
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = register(registerName, registerEmail, registerPassword, registerPhone);
+    setIsSubmitting(true);
+    const success = await register(registerName, registerEmail, registerPassword, registerPhone);
     if (success) {
         setActiveTab('login');
         setLoginEmail(registerEmail); // Pre-fill login form
@@ -45,6 +52,7 @@ export default function UserLoginPage() {
         setRegisterPassword('');
         setRegisterPhone('');
     }
+    setIsSubmitting(false);
   };
 
   const onTabChange: TabsProps['onValueChange'] = (value) => {
@@ -78,7 +86,10 @@ export default function UserLoginPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
-                <Button type="submit" className="w-full">Login</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Login
+                </Button>
               </CardFooter>
             </form>
           </Card>
@@ -107,11 +118,14 @@ export default function UserLoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Password</Label>
-                  <Input id="register-password" type="password" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
+                  <Input id="register-password" type="password" required minLength={6} value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
-                <Button type="submit" className="w-full">Register</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Register
+                </Button>
                 <p className="text-center text-sm text-muted-foreground">
                   Want to host events?{' '}
                   <Link href="/artist-register" className="font-semibold text-primary hover:underline">

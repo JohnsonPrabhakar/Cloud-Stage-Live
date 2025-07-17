@@ -6,8 +6,42 @@ import type { User, Role, ArtistApplication, Event, Movie, Ticket } from '@/lib/
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockEvents, mockMovies, mockTickets as initialMockTickets, mockUsers as initialMockUsers, mockApplications } from '@/lib/mock-data';
 import { getEventStatus } from '@/lib/utils';
+import { auth, db } from '@/lib/firebase';
+import { 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  onSnapshot, 
+  collection,
+  query,
+  where,
+  updateDoc,
+  addDoc,
+  serverTimestamp,
+  deleteDoc,
+  Timestamp
+} from "firebase/firestore";
+
+// Helper to convert Firestore timestamps to Dates in nested objects
+const convertTimestamps = (data: any) => {
+    if (data?.date instanceof Timestamp) {
+        data.date = data.date.toDate();
+    }
+    if (data?.purchaseDate instanceof Timestamp) {
+        data.purchaseDate = data.purchaseDate.toDate();
+    }
+    if (data?.subscription?.expiryDate instanceof Timestamp) {
+        data.subscription.expiryDate = data.subscription.expiryDate.toDate();
+    }
+    return data;
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
@@ -23,283 +57,193 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      const storedRole = localStorage.getItem('role') as Role;
-      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-      const storedArtistApplications = localStorage.getItem('artistApplications');
-      const storedEvents = localStorage.getItem('events');
-      const storedMovies = localStorage.getItem('movies');
-      const storedTickets = localStorage.getItem('allTickets');
-      
-      if (storedUser && storedRole) {
-        const parsedUser = JSON.parse(storedUser);
-        if(parsedUser.subscription?.expiryDate) {
-            parsedUser.subscription.expiryDate = new Date(parsedUser.subscription.expiryDate);
+    // Firebase Auth state listener
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const userData = convertTimestamps(userDocSnap.data() as User);
+          setUser(userData);
+          setRole(userData.role);
+        } else {
+            // This case might happen if a user is in auth but not in firestore. Log them out.
+            await signOut(auth);
+            setUser(null);
+            setRole(null);
         }
-        setUser(parsedUser);
-        setRole(storedRole);
-      }
-
-      if (storedRegisteredUsers) {
-        const parsedUsers: User[] = JSON.parse(storedRegisteredUsers);
-        setRegisteredUsers(parsedUsers.map(u => ({...u, applicationStatus: u.applicationStatus || 'none'})));
       } else {
-        const defaultUsers: User[] = [
-            { id: 'admin', name: 'Admin', email: 'admin@cloudstage.live', password: 'admin', role: 'admin', applicationStatus: 'approved' },
-            ...initialMockUsers,
-        ];
-        setRegisteredUsers(defaultUsers);
-        localStorage.setItem('registeredUsers', JSON.stringify(defaultUsers));
+        setUser(null);
+        setRole(null);
       }
+      setIsLoading(false);
+    });
 
-       if (storedArtistApplications) {
-        setArtistApplications(JSON.parse(storedArtistApplications));
-      } else {
-        setArtistApplications(mockApplications);
-        localStorage.setItem('artistApplications', JSON.stringify(mockApplications));
-      }
-
-      if (storedEvents) {
-          const parsedEvents = JSON.parse(storedEvents).map((e: Omit<Event, 'status'> & {date: string}) => {
-            const date = new Date(e.date);
+    // Firestore real-time listeners
+    const unsubscribeEvents = onSnapshot(collection(db, "events"), (snapshot) => {
+        const eventsData = snapshot.docs.map(doc => {
+            const data = convertTimestamps(doc.data());
             return {
-              ...e,
-              date,
-              duration: e.duration || 90,
-              status: getEventStatus(date, e.duration || 90),
-            };
-          });
-          setEvents(parsedEvents);
-      } else {
-        const initialEvents = mockEvents.map(e => ({ ...e, date: new Date(e.date), status: getEventStatus(new Date(e.date), e.duration) }));
-        setEvents(initialEvents);
-        localStorage.setItem('events', JSON.stringify(initialEvents));
-      }
-       if (storedMovies) {
-          setMovies(JSON.parse(storedMovies));
-      } else {
-        setMovies(mockMovies);
-        localStorage.setItem('movies', JSON.stringify(mockMovies));
-      }
-       if (storedTickets) {
-          const parsedTickets = JSON.parse(storedTickets).map((t: Ticket) => ({...t, purchaseDate: new Date(t.purchaseDate)}));
-          setAllTickets(parsedTickets);
-       } else {
-          setAllTickets(initialMockTickets);
-          localStorage.setItem('allTickets', JSON.stringify(initialMockTickets));
-       }
-      
-    } catch (error) {
-        console.error("Failed to parse local storage item.", error)
-    }
-    setIsLoading(false);
+                id: doc.id,
+                ...data,
+                status: getEventStatus(data.date, data.duration || 90),
+            } as Event;
+        });
+        setEvents(eventsData);
+    });
+
+    const unsubscribeMovies = onSnapshot(collection(db, "movies"), (snapshot) => {
+        setMovies(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie)));
+    });
+
+    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+        setRegisteredUsers(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as User)));
+    });
+
+    const unsubscribeApplications = onSnapshot(collection(db, "artistApplications"), (snapshot) => {
+        setArtistApplications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ArtistApplication)));
+    });
+    
+    const unsubscribeAllTickets = onSnapshot(collection(db, "tickets"), (snapshot) => {
+        setAllTickets(snapshot.docs.map(doc => ({ id: doc.id, ...convertTimestamps(doc.data()) } as Ticket)));
+    });
+
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeEvents();
+      unsubscribeMovies();
+      unsubscribeUsers();
+      unsubscribeApplications();
+      unsubscribeAllTickets();
+    };
   }, []);
-
+  
+  // Update myTickets when the logged-in user or all tickets change
   useEffect(() => {
-    const interval = setInterval(() => {
-      setEvents(prevEvents => 
-        prevEvents.map(e => ({
-          ...e,
-          status: getEventStatus(e.date, e.duration)
-        }))
-      );
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (user && allTickets.length > 0) {
-        const userTickets = allTickets.filter(t => t.userId === user.id);
-        setMyTickets(userTickets);
+    if (user) {
+      const userTickets = allTickets.filter(ticket => ticket.userId === user.id);
+      setMyTickets(userTickets);
     } else {
-        setMyTickets([]);
+      setMyTickets([]);
     }
   }, [user, allTickets]);
 
-  const persistUsers = (users: User[]) => {
-    setRegisteredUsers(users);
-    localStorage.setItem('registeredUsers', JSON.stringify(users));
-  }
 
-  const persistApplications = (applications: ArtistApplication[]) => {
-    setArtistApplications(applications);
-    localStorage.setItem('artistApplications', JSON.stringify(applications));
-  }
-  
-  const persistEvents = (eventsToSave: Event[]) => {
-    setEvents(eventsToSave);
-    localStorage.setItem('events', JSON.stringify(eventsToSave));
-  }
-
-  const persistMovies = (moviesToSave: Movie[]) => {
-    setMovies(moviesToSave);
-    localStorage.setItem('movies', JSON.stringify(moviesToSave));
-  };
-  
-  const persistTickets = (ticketsToSave: Ticket[]) => {
-    setAllTickets(ticketsToSave);
-    localStorage.setItem('allTickets', JSON.stringify(ticketsToSave));
-  }
-
-  const login = (email: string, pass: string): boolean => {
+  const login = async (email: string, pass: string): Promise<boolean> => {
     setIsLoading(true);
-    const foundUser = registeredUsers.find(u => u.email === email && u.password === pass);
-
-    if (!foundUser) {
-        toast({
-            title: 'Login Failed',
-            description: 'Please check your credentials.',
-            variant: 'destructive'
-        });
-        setIsLoading(false);
-        return false;
-    }
-    
-    if (foundUser.role === 'artist' && foundUser.applicationStatus !== 'approved') {
-        const status = foundUser.applicationStatus === 'pending' ? 'is still pending review' : 'was rejected';
-        toast({
-            title: 'Login Failed',
-            description: `Your artist application ${status}.`,
-            variant: 'destructive'
-        });
-        setIsLoading(false);
-        return false;
-    }
-    
-    if(foundUser.subscription?.expiryDate) {
-        foundUser.subscription.expiryDate = new Date(foundUser.subscription.expiryDate);
-    }
-
-    setUser(foundUser);
-    setRole(foundUser.role);
-    localStorage.setItem('user', JSON.stringify(foundUser));
-    localStorage.setItem('role', foundUser.role);
-
-    toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${foundUser.name}!`
-    });
-
-    if (foundUser.role === 'admin') router.push('/admin');
-    else if (foundUser.role === 'artist') router.push('/artist/dashboard');
-    else router.push('/user-dashboard');
-
-    setIsLoading(false);
-    return true;
-  };
-
-  const register = (name: string, email: string, pass: string, phoneNumber: string): boolean => {
-    if (registeredUsers.some(u => u.email === email)) {
-       toast({
-        title: 'Registration Failed',
-        description: 'An account with this email already exists.',
-        variant: 'destructive'
-      });
-      return false; 
-    }
-    const newUser: User = { 
-      id: `user-${Date.now()}`, 
-      name, 
-      email, 
-      password: pass, 
-      phoneNumber, 
-      role: 'user', 
-      applicationStatus: 'none',
-      profilePictureUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${email}`
-    };
-    persistUsers([...registeredUsers, newUser]);
-    
-    toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });
-    return true;
-  };
-
-  const artistRegister = (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
-     if (registeredUsers.some(u => u.email === applicationData.email)) {
-       toast({
-          title: 'Application Failed',
-          description: 'An account with this email already exists.',
-          variant: 'destructive'
-        });
-       return;
-     }
-
-     const existingApplication = artistApplications.find(app => app.email === applicationData.email);
-     if (existingApplication && (existingApplication.status.toLowerCase() === 'pending' || existingApplication.status.toLowerCase() === 'approved')) {
-       toast({
-         title: 'Application Exists',
-         description: 'An application with this email is already pending or has been approved.',
-         variant: 'destructive',
-       });
-       return;
-     }
-
-     const newApplication: ArtistApplication = {
-        ...applicationData,
-        id: `app-${Date.now()}`,
-        status: 'Pending',
-     }
-     
-     const newArtistUser: User = { 
-       id: `artist-${Date.now()}`,
-       name: newApplication.name,
-       email: newApplication.email,
-       password: newApplication.password,
-       role: 'artist',
-       applicationStatus: 'pending',
-       profilePictureUrl: newApplication.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${newApplication.email}`,
-     };
-     persistUsers([...registeredUsers, newArtistUser]);
-     persistApplications([...artistApplications, newApplication]);
-     
-     toast({
-      title: 'Application Submitted!',
-      description: 'Your application is pending review. We will notify you upon approval.',
-    });
-    router.push('/user-login');
-  };
-
-  const updateApplicationStatus = (applicationId: string, status: 'Approved' | 'Rejected', reason?: string) => {
-      const appToUpdate = artistApplications.find(app => app.id === applicationId);
-      if (!appToUpdate) return;
-      
-      const updatedApplications = artistApplications.map(app => {
-        if (app.id !== applicationId) return app;
-        const updatedApp: ArtistApplication = { ...app, status };
-        if (status === 'Rejected' && reason) {
-            updatedApp.rejectionReason = reason;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        // onAuthStateChanged will handle setting user and role
+        toast({ title: 'Login Successful', description: `Welcome back!` });
+        
+        // Fetch user doc to decide redirection
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser!.uid));
+        if (userDoc.exists()) {
+            const userData = userDoc.data() as User;
+            if (userData.role === 'admin') router.push('/admin');
+            else if (userData.role === 'artist') {
+                 if(userData.applicationStatus === 'approved'){
+                     router.push('/artist/dashboard');
+                 } else {
+                     const status = userData.applicationStatus === 'pending' ? 'is still pending review' : 'was rejected';
+                     toast({ title: 'Login Failed', description: `Your artist application ${status}.`, variant: 'destructive' });
+                     await signOut(auth);
+                     return false;
+                 }
+            }
+            else router.push('/user-dashboard');
         }
-        return updatedApp;
-      });
-      persistApplications(updatedApplications);
-
-      const newStatus = status === 'Approved' ? 'approved' : 'rejected';
-      const updatedUsers = registeredUsers.map(u => 
-        u.email === appToUpdate.email ? { ...u, applicationStatus: newStatus as User['applicationStatus'] } : u
-      );
-      persistUsers(updatedUsers);
+        return true;
+    } catch (error: any) {
+        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+        return false;
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  const updateUserProfile = (updatedData: Partial<User>) => {
+  const register = async (name: string, email: string, pass: string, phoneNumber: string): Promise<boolean> => {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const firebaseUser = userCredential.user;
+        const newUser: User = { 
+            id: firebaseUser.uid, 
+            name, 
+            email, 
+            phoneNumber, 
+            role: 'user', 
+            applicationStatus: 'none',
+            profilePictureUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${email}`
+        };
+        await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        toast({ title: 'Registration Successful', description: 'Welcome! Please log in.' });
+        await signOut(auth); // Log out user so they can log in themselves
+        return true;
+    } catch (error: any) {
+        toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
+        return false;
+    }
+  };
+
+  const artistRegister = async (applicationData: Omit<ArtistApplication, 'id' | 'status'>) => {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, applicationData.email, applicationData.password!);
+        const firebaseUser = userCredential.user;
+
+        const newArtistUser: User = { 
+            id: firebaseUser.uid,
+            name: applicationData.name,
+            email: applicationData.email,
+            role: 'artist',
+            applicationStatus: 'pending',
+            profilePictureUrl: applicationData.artistImageUrl || `https://api.dicebear.com/8.x/lorelei/svg?seed=${applicationData.email}`,
+        };
+        await setDoc(doc(db, 'users', firebaseUser.uid), newArtistUser);
+
+        const newApplication: Omit<ArtistApplication, 'id'> = {
+            ...applicationData,
+            status: 'Pending',
+            userId: firebaseUser.uid
+        };
+        delete newApplication.password; 
+        await addDoc(collection(db, 'artistApplications'), newApplication);
+
+        toast({ title: 'Application Submitted!', description: 'Your application is pending review.' });
+        await signOut(auth);
+        router.push('/user-login');
+    } catch (error: any) {
+        toast({ title: 'Application Failed', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const updateApplicationStatus = async (applicationId: string, status: 'Approved' | 'Rejected', reason?: string) => {
+      const appDocRef = doc(db, 'artistApplications', applicationId);
+      const appDoc = await getDoc(appDocRef);
+
+      if (appDoc.exists()) {
+        const appData = appDoc.data() as ArtistApplication;
+        const userDocRef = doc(db, 'users', appData.userId!);
+        
+        const updatedAppData: any = { status };
+        if (status === 'Rejected' && reason) {
+            updatedAppData.rejectionReason = reason;
+        }
+        await updateDoc(appDocRef, updatedAppData);
+
+        const newStatus = status === 'Approved' ? 'approved' : 'rejected';
+        await updateDoc(userDocRef, { applicationStatus: newStatus });
+      }
+  };
+
+  const updateUserProfile = async (updatedData: Partial<User>) => {
     if (!user) return;
-    
-    const updatedUser = { ...user, ...updatedData };
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-
-    const updatedRegisteredUsers = registeredUsers.map(u => 
-      u.id === user.id ? updatedUser : u
-    );
-    persistUsers(updatedRegisteredUsers);
-
-    toast({
-      title: "Profile Updated",
-      description: "Your changes have been saved successfully."
-    });
+    const userDocRef = doc(db, 'users', user.id);
+    await updateDoc(userDocRef, updatedData);
+    toast({ title: "Profile Updated", description: "Your changes have been saved." });
   };
-
-  const subscribeUser = () => {
+  
+  const subscribeUser = async () => {
     if (!user) {
         toast({ title: "Login Required", description: "You must be logged in to subscribe.", variant: "destructive"});
         router.push('/user-login');
@@ -309,85 +253,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 30);
 
-    const updatedUser: User = {
-        ...user,
-        subscription: {
-            plan: 'Premium',
-            expiryDate: expiryDate,
-            eventCount: 20
-        }
+    const subscriptionData = {
+        plan: 'Premium',
+        expiryDate: Timestamp.fromDate(expiryDate),
+        eventCount: 20
     };
 
-    updateUserProfile(updatedUser);
-    toast({
-        title: "Subscription Successful!",
-        description: "Welcome to CloudStage Live Premium."
-    });
+    await updateDoc(doc(db, 'users', user.id), { subscription: subscriptionData });
+    toast({ title: "Subscription Successful!", description: "Welcome to CloudStage Live Premium." });
   }
 
-  const createEvent = (eventData: Omit<Event, 'id' | 'artist' | 'artistId' | 'status' | 'approvalStatus'>) => {
+  const createEvent = async (eventData: Omit<Event, 'id' | 'artist' | 'artistId' | 'status' | 'approvalStatus'>) => {
     if (!user || user.role !== 'artist') {
       toast({ title: "Unauthorized", description: "You must be an artist to create an event.", variant: "destructive" });
       return;
     }
 
-    const newEvent: Event = {
+    const newEvent: Omit<Event, 'id' | 'status'> = {
       ...eventData,
-      id: `evt-${Date.now()}`,
       artist: user.name,
       artistId: user.id,
       approvalStatus: 'Pending',
-      status: getEventStatus(eventData.date, eventData.duration),
+      date: Timestamp.fromDate(eventData.date)
     };
-
-    persistEvents([...events, newEvent]);
-    toast({
-      title: 'Event Submitted!',
-      description: 'Your event has been submitted for approval.'
-    });
+    
+    await addDoc(collection(db, 'events'), newEvent);
+    toast({ title: 'Event Submitted!', description: 'Your event has been submitted for approval.' });
     router.push('/artist/dashboard');
   };
-
-  const createMovie = (movieData: Omit<Movie, 'id'>) => {
-    if (!user || user.role !== 'admin') {
+  
+  const createMovie = async (movieData: Omit<Movie, 'id'>) => {
+     if (!user || user.role !== 'admin') {
       toast({ title: "Unauthorized", description: "You must be an admin to add a movie.", variant: "destructive" });
       return;
     }
-
-    const newMovie: Movie = {
-      ...movieData,
-      id: `mov-${Date.now()}`,
-    };
-
-    persistMovies([...movies, newMovie]);
-    toast({
-        title: 'Movie Added!',
-        description: 'The new movie has been successfully added to the platform.'
-    });
+    await addDoc(collection(db, 'movies'), movieData);
+    toast({ title: 'Movie Added!', description: 'The new movie has been successfully added.' });
   };
   
-  const deleteMovie = (movieId: string) => {
-    const updatedMovies = movies.filter(movie => movie.id !== movieId);
-    persistMovies(updatedMovies);
-    toast({
-      title: 'Movie Deleted',
-      description: 'The movie has been successfully removed.',
-      variant: 'destructive'
-    });
+  const deleteMovie = async (movieId: string) => {
+    await deleteDoc(doc(db, "movies", movieId));
+    toast({ title: 'Movie Deleted', description: 'The movie has been successfully removed.', variant: 'destructive'});
   };
 
-  const updateEventApproval = (eventId: string, status: 'Approved' | 'Rejected') => {
-    const updatedEvents = events.map(e => 
-      e.id === eventId ? { ...e, approvalStatus: status } : e
-    );
-    persistEvents(updatedEvents);
-    toast({
-        title: `Event ${status}`,
-        description: `The event has been successfully ${status.toLowerCase()}.`
-    });
+  const updateEventApproval = async (eventId: string, status: 'Approved' | 'Rejected') => {
+    const eventDocRef = doc(db, 'events', eventId);
+    await updateDoc(eventDocRef, { approvalStatus: status });
+    toast({ title: `Event ${status}`, description: `The event has been successfully ${status.toLowerCase()}.`});
   };
 
-  const purchaseTicket = (eventId: string) => {
+  const purchaseTicket = async (eventId: string) => {
     if (!user) {
         toast({ title: "Login Required", description: "You must be logged in to purchase a ticket.", variant: "destructive"});
         router.push('/user-login');
@@ -398,43 +313,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Already Owned", description: "You already have a ticket for this event.", variant: "destructive" });
       return;
     }
-
+    
+    let usedSubscriptionCredit = false;
     if (user.subscription && user.subscription.eventCount > 0) {
-      const updatedUser: User = {
-        ...user,
-        subscription: {
-          ...user.subscription,
-          eventCount: user.subscription.eventCount - 1
-        }
-      };
-      updateUserProfile(updatedUser);
-    } else {
-       const event = events.find(e => e.id === eventId);
-       if (!event || event.price > 0) {
-          // Here you would integrate a payment gateway
-       }
+      await updateDoc(doc(db, 'users', user.id), {
+        'subscription.eventCount': user.subscription.eventCount - 1
+      });
+      usedSubscriptionCredit = true;
     }
 
-    const newTicket: Ticket = {
-        id: `tkt-${Date.now()}`,
+    const newTicket = {
         userId: user.id,
         eventId,
-        purchaseDate: new Date()
+        purchaseDate: serverTimestamp(),
+        usedSubscriptionCredit,
     };
-    persistTickets([...allTickets, newTicket]);
+    await addDoc(collection(db, 'tickets'), newTicket);
 
-    toast({
-        title: "Purchase Successful!",
-        description: "Your ticket has been added to 'My Tickets'."
-    });
+    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
   }
 
-  const logout = () => {
+  const logout = async () => {
     setIsLoading(true);
-    setUser(null);
-    setRole(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('role');
+    await signOut(auth);
+    // onAuthStateChanged will clear user and role
     router.push('/');
     setIsLoading(false);
   };

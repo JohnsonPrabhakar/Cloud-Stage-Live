@@ -1,4 +1,6 @@
 
+import { Timestamp } from 'firebase/firestore';
+
 export type User = {
   id: string;
   name: string;
@@ -9,7 +11,7 @@ export type User = {
   profilePictureUrl?: string;
   subscription?: {
     plan: 'Premium';
-    expiryDate: Date;
+    expiryDate: Date | Timestamp;
     eventCount: number;
   };
   role: Role;
@@ -24,7 +26,7 @@ export type Event = {
   description: string;
   artist: string;
   artistId: string;
-  date: Date;
+  date: Date | Timestamp;
   duration: number; // Duration in minutes
   category: 'Music' | 'Stand-up' | 'Talk Show' | 'Workshop' | 'Purchase';
   language: 'English' | 'Spanish' | 'Hindi' | 'French';
@@ -49,11 +51,12 @@ export type Ticket = {
   id: string;
   userId: string;
   eventId: string;
-  purchaseDate: Date;
+  purchaseDate: Date | Timestamp;
 };
 
 export type ArtistApplication = {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   password?: string;
