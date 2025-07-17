@@ -99,14 +99,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Clean up previous role-specific listeners when auth state changes
       roleSpecificListeners.forEach(unsub => unsub());
       roleSpecificListeners = [];
-
-      if (firebaseUser) {
-        // Clean up any existing myTickets listener before setting a new one
+      
+      // Clean up any existing myTickets listener
         if (myTicketsUnsubRef.current) {
-          myTicketsUnsubRef.current();
+          myTicketsUnsubRef.current(); // Unsubscribe
           myTicketsUnsubRef.current = null;
         }
 
+
+      if (firebaseUser) {
         // Re-initialize myTickets listener (works for ALL users)
         const myTicketsQuery = query(collection(db, 'tickets'), where('userId', '==', firebaseUser.uid));
         const unsubscribeMyTickets = onSnapshot(myTicketsQuery, (snapshot) => {
@@ -115,6 +116,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, (error) => {
             console.error("Error fetching myTickets:", error);
         });
+
+        // Save the unsubscribe function for later cleanup
         myTicketsUnsubRef.current = unsubscribeMyTickets;
         
         const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -408,19 +411,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Purchase Failed", description: "Event details could not be found.", variant: "destructive" });
         return;
     }
-    
-    // MOCK IMPLEMENTATION: Add ticket to local state only
-    const newMockTicket: Ticket = {
-        id: `mock-${Date.now()}`, // mock ID
-        userId: user.id,
-        eventId: eventId,
-        artistId: eventDetails.artistId || null,
-        purchaseDate: new Date(),
-    };
 
-    setMyTickets(prevTickets => [...prevTickets, newMockTicket]);
-    
-    toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    try {
+        const newTicket = {
+            userId: user.id,
+            eventId: eventId,
+            artistId: eventDetails.artistId || null,
+            purchaseDate: serverTimestamp(),
+        };
+        await addDoc(collection(db, 'tickets'), newTicket);
+        toast({ title: "Purchase Successful!", description: "Your ticket has been added to 'My Tickets'."});
+    } catch (error: any) {
+        console.error("Error purchasing ticket:", error);
+        toast({ title: "Purchase Failed", description: error.message, variant: "destructive"});
+    }
   }
 
   const logout = async () => {
