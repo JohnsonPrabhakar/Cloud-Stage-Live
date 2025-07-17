@@ -6,8 +6,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '@/components/ui/carousel';
 import { EventCard } from '@/components/EventCard';
 import { MovieCard } from '@/components/MovieCard';
@@ -90,10 +88,10 @@ export default function Home() {
 
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         <HomepageFilter categories={eventCategories} languages={eventLanguages} />
-        <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
-        <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
-        <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} plugin={plugin} ticketIds={myTicketEventIds} />
-        <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} plugin={plugin} />
+        <SectionCarousel title="Live Events" items={liveEvents} CardComponent={EventCard} ticketIds={myTicketEventIds} />
+        <SectionCarousel title="Upcoming Events" items={upcomingEvents} CardComponent={EventCard} ticketIds={myTicketEventIds} />
+        <SectionCarousel title="Past Events" items={pastEvents} CardComponent={EventCard} ticketIds={myTicketEventIds} />
+        <SectionCarousel title="Featured Movies" items={featuredMovies} CardComponent={MovieCard} />
       </div>
     </div>
   );
@@ -103,37 +101,24 @@ interface SectionCarouselProps<T> {
   title: string;
   items: T[];
   CardComponent: React.FC<{ item: T, hasTicket?: boolean }>;
-  plugin: React.MutableRefObject<any>;
   ticketIds?: Set<string>;
 }
 
-function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, plugin, ticketIds }: SectionCarouselProps<T>) {
+function SectionCarousel<T extends { id: string }>({ title, items, CardComponent, ticketIds }: SectionCarouselProps<T>) {
   if (items.length === 0) return null;
 
   return (
     <section>
       <h2 className="text-3xl font-headline font-bold mb-6">{title}</h2>
-      <Carousel 
-        opts={{
-          align: "start",
-        }}
-        plugins={[plugin.current]}
-        onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.reset}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-4">
+      <div className="relative">
+        <div className="flex space-x-6 overflow-x-auto pb-4 -mx-4 px-4">
           {items.map((item, index) => (
-            <CarouselItem key={item.id + index} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-              <div className="p-1 h-full">
+            <div key={item.id + index} className="flex-shrink-0 w-[calc(100%-2rem)] sm:w-80">
                 <CardComponent item={item} hasTicket={ticketIds?.has(item.id)} />
-              </div>
-            </CarouselItem>
+            </div>
           ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden sm:inline-flex" />
-        <CarouselNext className="hidden sm:inline-flex" />
-      </Carousel>
+        </div>
+      </div>
     </section>
   );
 }
