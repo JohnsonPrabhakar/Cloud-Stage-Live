@@ -51,6 +51,7 @@ export type Ticket = {
   id: string;
   userId: string;
   eventId: string;
+  artistId: string | null;
   purchaseDate: Date | Timestamp;
 };
 
@@ -69,3 +70,5 @@ export type ArtistApplication = {
   rejectionReason?: string;
   artistImageUrl?: string | null;
 };
+
+    
